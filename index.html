@@ -1,6 +1,9 @@
 ---
 layout: default
-title: Hello World!
+title: blog entries
 ---
-<h1>Hello world!</h1>
-<p>This is my first Jekyll website.</p>
+<li>
+  {% for entry in site.posts %}
+  	<li>{{ entry }}</li>
+  {% endfor %}
+</li>
