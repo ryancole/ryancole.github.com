@@ -2,8 +2,8 @@
 layout: default
 title: blog entries
 ---
-<li>
+<ul>
   {% for entry in site.posts %}
-  	<li>{{ entry }}</li>
+  	<li><a href="{{ entry.url }}">{{ entry.title }}</a></li>
   {% endfor %}
-</li>
+</ul>
