@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+    <title>Minecraft and Clojure for fun and profit, without the profit &mdash; rycole.com</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/static/css/pygments.css" />
+    <link rel="stylesheet" href="/static/css/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="span4 left-side">
+          <a href="/"><div id="my-face"></div></a>
+          <h1>Minecraft and Clojure for fun and profit, without the profit</h1>
+          <h2>Jan 26, 2013</h2>
+        </div>
+        <div class="span8 right-side">
+          <p>We need a name. Maybe &#8220;Operation Hot Mother.&#8221; No, let&#8217;s try to top that. (They never did.) Fried cheese… with club sauce. Popcorn shrimp… with club sauce. Chicken fingers… with spicy club sauce. I&#8217;m a scholar. I enjoy scholarly pursuits. Suddenly playing with yourself is a scholarly pursuit? I think the only time you cooked for us was the morning Rosa&#8217;s mom died. You gave us cereal in an ashtray. I&#8217;m not a prostitute. Then I shall let you live! Let&#8217;s see some bananas and nuts!</p>
+<div class='highlight'><pre><code class='clj'><span class='p'>(</span><span class='kd'>ns </span><span class='nv'>com.rycole.bukkit.simple.core</span>
+  <span class='p'>(</span><span class='ss'>:require</span> <span class='nv'>com.rycole.bukkit.simple.listeners</span><span class='p'>)</span>
+  <span class='p'>(</span><span class='ss'>:import</span> <span class='p'>[</span><span class='nv'>com.rycole.bukkit.simple.listeners</span> <span class='nv'>PlayerLoginListener</span><span class='p'>])</span>
+  <span class='p'>(</span><span class='ss'>:gen-class</span> <span class='ss'>:name</span> <span class='nv'>com.rycole.bukkit.simple.core.Main</span>
+              <span class='ss'>:extends</span> <span class='nv'>org.bukkit.plugin.java.JavaPlugin</span><span class='p'>))</span>
+
+<span class='p'>(</span><span class='kd'>defn </span><span class='nv'>-onEnable</span> <span class='p'>[</span><span class='nv'>this</span><span class='p'>]</span>
+  <span class='p'>(</span><span class='nf'>.info</span> <span class='p'>(</span><span class='nf'>.getLogger</span> <span class='nv'>this</span><span class='p'>)</span> <span class='s'>&quot;PLUGIN ENABLED&quot;</span><span class='p'>)</span>
+  <span class='p'>(</span><span class='nf'>.registerEvents</span> <span class='p'>(</span><span class='nf'>.getPluginManager</span> <span class='p'>(</span><span class='nf'>.getServer</span> <span class='nv'>this</span><span class='p'>))</span> <span class='p'>(</span><span class='nf'>com.rycole.bukkit.simple.listeners.PlayerLoginListener.</span><span class='p'>)</span> <span class='nv'>this</span><span class='p'>))</span>
+
+<span class='p'>(</span><span class='kd'>defn </span><span class='nv'>-onDisable</span> <span class='p'>[</span><span class='nv'>this</span><span class='p'>]</span>
+  <span class='p'>(</span><span class='nf'>.info</span> <span class='p'>(</span><span class='nf'>.getLogger</span> <span class='nv'>this</span><span class='p'>)</span> <span class='s'>&quot;PLUGIN DISABLED&quot;</span><span class='p'>))</span>
+</code></pre></div>
+<p>Either I zip down, or he zips up, and that is a mighty long zipper on Mother&#8217;s Cher jumpsuit. And I am rock steady. No more dizzies. This is not me encouraging you to go here and write a review. No. Oh, I can just taste those meaty leading man parts in my mouth. Hey, it was one night of wild passion! And yet you didn&#8217;t notice her body? I like to look in the mirror.</p>
+
+<p>Happy Franklin Friday. Touché, Pandora. If that man&#8217;s straight, then I am sober. He… she… what&#8217;s the difference? Oh hear, hear. In the dark, it all looks the same. Early. Go ahead, touch the cornballer. How about a turtle? I&#8217;ve always loved those leathery little snappy faces.</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -2,8 +2,13 @@
 layout: default
 title: blog entries
 ---
-<ul>
+<ul class="entries">
   {% for entry in site.posts %}
-  	<li><a href="{{ entry.url }}">{{ entry.title }}</a></li>
+  <a href="{{ entry.url }}">
+    <li class="entry">
+      <h2>{{ entry.title }} <small>posted on {{ entry.date | date:"%b %d, %Y" }}</small></h2>
+      <div>{{ entry.content | truncatewords:50 }}</div>
+    </li>
+  </a>
   {% endfor %}
 </ul>

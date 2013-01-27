@@ -3,15 +3,18 @@
 	<head>
     <title>{{ page.title }} &mdash; rycole.com</title>
     <link rel="stylesheet" href="/static/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/static/css/pygments.css" />
     <link rel="stylesheet" href="/static/css/style.css" />
   </head>
   <body>
     <div class="container">
-    	<div class="row">
-        <div class="span4">
+      <div class="row">
+        <div class="span4 left-side">
+          <a href="/"><div id="my-face"></div></a>
           <h1>{{ page.title }}</h1>
+          <h2>{{ page.date | date:"%b %d, %Y" }}</h2>
         </div>
-        <div class="span8">
+        <div class="span8 right-side">
           {{ content }}
         </div>
       </div>
