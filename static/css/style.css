@@ -3,7 +3,19 @@
   src: url('/static/font/inconsolata.otf');
 }
 
+@font-face {
+  font-family: 'Chunk';
+  src: url('/static/font/chunk.otf');
+}
+
 html {
   color: #111;
+}
+
+code {
   font-family: 'Inconsolata';
+}
+
+h1, h2, h3 {
+  font-family: 'Chunk';
 }
