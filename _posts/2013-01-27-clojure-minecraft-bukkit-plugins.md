@@ -84,9 +84,9 @@ I don't actually do anything with the function parameters. I just simply log a m
 
 With all of this in place, just `:require` and `:import` your listeners from inside `core.clj` and register them so that Bukkit knows about them. Compile the jar using Leiningen by doing `lein jar`. Place the jar file into Bukkit's plugins directory and run Bukkit in such a way that allows you to put Clojure and these plugins on the class path. A Windows batch file for doing this could look like this.
 
-{% highlight clj %}
+{% highlight %}
 java -cp C:\Users\Ryan\.m2\repository\org\clojure\clojure\1.4.0\clojure-1.4.0.jar;E:\Games\Bukkit\plugins\*;craftbukkit-1.4.7-R0.1.jar org.bukkit.craftbukkit.Main
 PAUSE
 {% endhighlight %}
 
-With any luck, you're now writing Bukkit plugins in Clojure without any elaborate hacks.
+With any luck, you're now writing Bukkit plugins in Clojure without any elaborate hacks. The code for my plugin that I talked about in this write up is available on [github](https://github.com/ryancole/com.rycole.bukkit.simple).
