@@ -1,0 +1,8 @@
+@font-face {
+  font-family: 'Inconsolata';
+  src: url('/static/font/inconsolata.otf');
+}
+
+html {
+  font-family: 'Inconsolata';
+}
