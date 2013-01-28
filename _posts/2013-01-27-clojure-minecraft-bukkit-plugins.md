@@ -2,11 +2,9 @@
 layout: entry
 title: Minecraft and Clojure for fun and profit, without the profit
 ---
-I'm currently trying to force myself to learn Clojure. Not because I dislike Clojure, but because the syntax of it is still so alien to me. In fact, each time I sit down and work with Clojure it makes me want to learn more about it. My approach to learning new languages is to find an interesting project to extend or build for. This gives me something tangible to work with and helps me stay interested. So, for Clojure I decided to try to write Bukkit plugins. Bukkit is an open-source Minecraft server, written in Java.
+My approach to learning new languages is to find an interesting project to extend or build for. This gives me something tangible to work with and helps me stay interested. So, for Clojure I decided to try to write Bukkit plugins. Bukkit is an open-source Minecraft server, written in Java. Being my first Clojure project, I figured that since Clojure is a JVM language and Bukkit is also on the JVM, that it would be really straight forward to just whip up a simple plugin. This probably would have been the case if this weren't my first project with Clojure. But, since it was first my project, there was actually quite a bit of learning to do before my Clojure plugin would load up into Bukkit and actually do something.
 
-Being my first Clojure project, I figured that since Clojure is a JVM language and Bukkit is also on the JVM, that it would be really straight forward to just whip up a simple plugin. This probably would have been the case if this weren't my first project with Clojure. But, since it was first my project, there was actually quite a bit of learning to do before my Clojure plugin would load up into Bukkit and actually do something.
-
-I'm also pretty new to the JVM, so it was my understanding that a jar file contained the JVM byte code, and once a program was made into a jar it was good to go. For plugins to be loaded by Bukkit, they have to be usable from Java-land, since Bukkit is Java. So, I was surprised to find that my jars did not contain byte code yet. My jars seemed to just contain my Clojure code.
+My strategy was to write some Java classes in Clojure and compile them into a plugin jar file. My only option here was to use Clojure's `gen-class` macro, because these classes will need to be named, conform to interfaces, and inherit from sub-classes. There are other ways to create Java classes in Clojure, but `gen-class` is the only one that provides all of these features. But, I was surprised to find that these classes of mine were not being created in the jar file when I would run `lein jar`. This is because `gen-class` requires Ahead of Time Compiling, which goes a step further and turns your Clojure code into Java byte code. So, AOT? What the what?
 
 ## Problem 1: make my jars contain byte code
 
@@ -84,7 +82,7 @@ I don't actually do anything with the function parameters. I just simply log a m
 
 With all of this in place, just `:require` and `:import` your listeners from inside `core.clj` and register them so that Bukkit knows about them. Compile the jar using Leiningen by doing `lein jar`. Place the jar file into Bukkit's plugins directory and run Bukkit in such a way that allows you to put Clojure and these plugins on the class path. A Windows batch file for doing this could look like this.
 
-{% highlight clj %}
+{% highlight bash %}
 java -cp C:\Users\Ryan\.m2\repository\org\clojure\clojure\1.4.0\clojure-1.4.0.jar;E:\Games\Bukkit\plugins\*;craftbukkit-1.4.7-R0.1.jar org.bukkit.craftbukkit.Main
 PAUSE
 {% endhighlight %}
