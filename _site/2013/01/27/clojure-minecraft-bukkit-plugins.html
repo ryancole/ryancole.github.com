@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+    <title>Minecraft and Clojure for fun and profit, without the profit &mdash; rycole.com</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/static/css/pygments.css" />
+    <link rel="stylesheet" href="/static/css/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="span4 left-side">
+          <a href="/"><div id="my-face"></div></a>
+          <h1>Minecraft and Clojure for fun and profit, without the profit</h1>
+          <h2>Jan 27, 2013</h2>
+        </div>
+        <div class="span8 right-side">
+          <p>I&#8217;m currently trying to force myself to learn Clojure. Not because I dislike Clojure, but because the syntax of it is still so alien to me. In fact, each time I sit down and work with Clojure it makes me want to learn more about it. My approach to learning new languages is to find an interesting project to extend or build for. This gives me something tangible to work with and helps me stay interested. So, for Clojure I decided to try to write Bukkit plugins. Bukkit is an open-source Minecraft server, written in Java.</p>
+
+<p>Being my first Clojure project, I figured that since Clojure is a JVM language and Bukkit is also on the JVM, that it would be really straight forward to just whip up a simple plugin. This probably would have been the case if this weren&#8217;t my first project with Clojure. But, since it was first my project, there was actually quite a bit of learning to do before my Clojure plugin would load up into Bukkit and actually do something.</p>
+
+<p>I&#8217;m also pretty new to the JVM, so it was my understanding that a jar file contained the JVM byte code, and once a program was made into a jar it was good to go. For plugins to be loaded by Bukkit, they have to be usable from Java-land, since Bukkit is Java. So, I was surprised to find that my jars did not contain byte code yet. My jars seemed to just contain my Clojure code.</p>
+
+<h2 id='problem_1_make_my_jars_contain_byte_code'>Problem 1: make my jars contain byte code</h2>
+
+<p>Luckily, it&#8217;s totally possible, and very easy, to use Leiningen to compile my Clojure code into a jar that contains byte code. In regards to Leiningen, this process is called Ahead of Time Compiling. Using AOT in your project&#8217;s project.clj file instructs Leiningen and the underlying compiling magic to take it a step farther and produce the byte code for you. In the case of my Bukkit plugin, I needed every namespace to be compiled using AOT, and I achieved this using the following project.clj.</p>
+<div class='highlight'><pre><code class='clj'><span class='p'>(</span><span class='kd'>defproject </span><span class='nv'>com.rycole.bukkit.simple</span> <span class='s'>&quot;0.1.0-SNAPSHOT&quot;</span>
+  <span class='ss'>:repositories</span> <span class='p'>[[</span><span class='s'>&quot;bukkit.release&quot;</span> <span class='s'>&quot;http://repo.bukkit.org/content/repositories/releases&quot;</span><span class='p'>]]</span>
+  <span class='ss'>:dependencies</span> <span class='p'>[[</span><span class='nv'>org.clojure/clojure</span> <span class='s'>&quot;1.4.0&quot;</span><span class='p'>]</span>
+                 <span class='p'>[</span><span class='nv'>org.bukkit/bukkit</span> <span class='s'>&quot;1.4.7-R0.1&quot;</span><span class='p'>]]</span>
+  <span class='ss'>:filespecs</span> <span class='p'>[{</span><span class='ss'>:type</span> <span class='ss'>:path</span> <span class='ss'>:path</span> <span class='s'>&quot;src\\plugin.yml&quot;</span><span class='p'>}]</span>
+  <span class='ss'>:aot</span> <span class='ss'>:all</span><span class='p'>)</span>
+</code></pre></div>
+<p>The <code>:aot :all</code> keywords mean that it will apply to all of the namespaces in my project. Now, I could safely move forward knowing that my code will be usable by Bukkit. From where, it&#8217;s just a matter of maximizing my usage of Clojure&#8217;s Java-interop functionality, and porting the Java examples, from Bukkit&#8217;s documentation, over to Clojure.</p>
+
+<h2 id='problem_2_extend_javaplugin'>Problem 2: extend JavaPlugin</h2>
+
+<p>With all of problem #1 in mind, I started a new Clojure project for my plugin, using Leiningen, by doing <code>lein new com.rycole.bukkit.simple.core</code>.</p>
+
+<p>Part of why I&#8217;m using AOT is because to extend Bukkit&#8217;s <code>JavaPlugin</code> class, which is the basis of a Bukkit plugin, I used Clojure&#8217;s <code>gen-class</code> function. So, the definition of my <code>com.rycole.bukkit.simple.core</code> namespace looks like this.</p>
+<div class='highlight'><pre><code class='clj'><span class='p'>(</span><span class='kd'>ns </span><span class='nv'>com.rycole.bukkit.simple.core</span>
+  <span class='p'>(</span><span class='ss'>:require</span> <span class='nv'>com.rycole.bukkit.simple.listeners</span><span class='p'>)</span>
+  <span class='p'>(</span><span class='ss'>:import</span> <span class='p'>[</span><span class='nv'>com.rycole.bukkit.simple.listeners</span> <span class='nv'>PlayerLoginListener</span><span class='p'>])</span>
+  <span class='p'>(</span><span class='ss'>:gen-class</span> <span class='ss'>:name</span> <span class='nv'>com.rycole.bukkit.simple.core.Main</span>
+              <span class='ss'>:extends</span> <span class='nv'>org.bukkit.plugin.java.JavaPlugin</span><span class='p'>))</span>
+</code></pre></div>
+<p><code>gen-class</code> creates a <code>Main</code> class that extends <code>JavaPlugin</code>. This occurs at compile-time, into the jar file, and is usable from Java-land. The only remaining thing that this <code>Main</code> class needs to do is provide event handlers for the plugin enabled and disabled events. Adding functions to our <code>Main</code> class couldn&#8217;t be easier.</p>
+<div class='highlight'><pre><code class='clj'><span class='p'>(</span><span class='kd'>defn </span><span class='nv'>-onEnable</span> <span class='p'>[</span><span class='nv'>this</span><span class='p'>]</span>
+  <span class='p'>(</span><span class='nf'>.info</span> <span class='p'>(</span><span class='nf'>.getLogger</span> <span class='nv'>this</span><span class='p'>)</span> <span class='s'>&quot;PLUGIN ENABLED&quot;</span><span class='p'>)</span>
+  <span class='p'>(</span><span class='nf'>.registerEvents</span> <span class='p'>(</span><span class='nf'>.getPluginManager</span> <span class='p'>(</span><span class='nf'>.getServer</span> <span class='nv'>this</span><span class='p'>))</span> <span class='p'>(</span><span class='nf'>com.rycole.bukkit.simple.listeners.PlayerLoginListener.</span><span class='p'>)</span> <span class='nv'>this</span><span class='p'>))</span>
+
+<span class='p'>(</span><span class='kd'>defn </span><span class='nv'>-onDisable</span> <span class='p'>[</span><span class='nv'>this</span><span class='p'>]</span>
+  <span class='p'>(</span><span class='nf'>.info</span> <span class='p'>(</span><span class='nf'>.getLogger</span> <span class='nv'>this</span><span class='p'>)</span> <span class='s'>&quot;PLUGIN DISABLED&quot;</span><span class='p'>))</span>
+</code></pre></div>
+<p>Now, with what we have here, this plugin can be compiled and loaded up by Bukkit. A <code>plugin.yml</code> file is required to be in the output jar, and can be easily added in the <code>project.clj</code> file. Try it out. You should see Bukkit say that it has loaded and enabled your plugin.</p>
+
+<h2 id='problem_3_well_thats_boring_so_lets_make_it_do_something'>Problem 3: well that&#8217;s boring, so lets make it do something</h2>
+
+<p>Once I had the pluging in this state, I was happy but I wasn&#8217;t satisfied. I wanted the pluging to actually do something &#8230; anything! So, the easiest thing that I could see to do was to handle player login events. When a player logs in to the server, I wanted my plugin to simply log a message to the Bukkit console.</p>
+
+<p>For a Bukkit plugin to handle events, it has to create <code>Listener</code> classes that implement functions that accept the appropriate event parameters. Now, I needed to create this class and implement these necessary member functions. Again, <code>gen-class</code> is the plan of attack, but this time it needs to specify a Java function annotation as well as some hints as to what the variable types of the function arguments are. Once you&#8217;ve seen this once, it&#8217;s pretty simple.</p>
+<div class='highlight'><pre><code class='clj'><span class='p'>(</span><span class='kd'>ns </span><span class='nv'>com.rycole.bukkit.simple.listeners</span>
+  <span class='p'>(</span><span class='ss'>:gen-class</span> <span class='ss'>:name</span> <span class='nv'>com.rycole.bukkit.simple.listeners.PlayerLoginListener</span>
+              <span class='ss'>:implements</span> <span class='p'>[</span><span class='nv'>org.bukkit.event.Listener</span><span class='p'>]</span>
+              <span class='ss'>:methods</span> <span class='p'>[[</span><span class='o'>^</span><span class='p'>{</span><span class='nv'>org.bukkit.event.EventHandler</span> <span class='nv'>true</span><span class='p'>}</span> <span class='nv'>onPlayerLoggedIn</span> <span class='p'>[</span><span class='nv'>org.bukkit.event.player.PlayerLoginEvent</span><span class='p'>]</span> <span class='nv'>void</span><span class='p'>]]))</span>
+</code></pre></div>
+<p>I made a new <code>listeners.clj</code> file, in which I an generating this class. This time, this class <code>:implements</code> instead of <code>:extends</code>. Also, the methods for which I needed to provide some meta data about are explicitly listed in the <code>:methods</code> parameter. In this case, I was only interested in implementing a single handler function for the <code>PlayerLoginEvent</code>.</p>
+<div class='highlight'><pre><code class='clj'><span class='p'>[</span><span class='o'>^</span><span class='p'>{</span><span class='nv'>org.bukkit.event.EventHandler</span> <span class='nv'>true</span><span class='p'>}</span> <span class='nv'>onPlayerLoggedIn</span> <span class='p'>[</span><span class='nv'>org.bukkit.event.player.PlayerLoginEvent</span><span class='p'>]</span> <span class='nv'>void</span><span class='p'>]</span>
+</code></pre></div>
+<p>The first item in this sequence is the annotation. This annotation is equivalent to <code>@EventHandler</code> in Java code. The <code>true</code> just means that it&#8217;s desired. Second, the <code>onPlayerLoggedIn</code> specifies the name of the function. Third, the following sequence specifies the data type of the parameters. This function only has one parameter. Last, the function&#8217;s return type is specified as <code>void</code>.</p>
+
+<p>Now that the function has been all meta-data&#8217;ed up, the only thing left to do is to actually implement it.</p>
+<div class='highlight'><pre><code class='clj'><span class='p'>(</span><span class='kd'>defn </span><span class='nv'>-onPlayerLoggedIn</span> <span class='p'>[</span><span class='nv'>this</span> <span class='nv'>evnt</span><span class='p'>]</span>
+  <span class='p'>(</span><span class='nf'>.info</span> <span class='p'>(</span><span class='nf'>org.bukkit.Bukkit/getLogger</span><span class='p'>)</span> <span class='s'>&quot;PLAYER LOGGED IN&quot;</span><span class='p'>))</span>
+</code></pre></div>
+<p>I don&#8217;t actually do anything with the function parameters. I just simply log a message to Bukkit&#8217;s console.</p>
+
+<h2 id='wrapping_it_up'>Wrapping it up</h2>
+
+<p>With all of this in place, just <code>:require</code> and <code>:import</code> your listeners from inside <code>core.clj</code> and register them so that Bukkit knows about them. Compile the jar using Leiningen by doing <code>lein jar</code>. Place the jar file into Bukkit&#8217;s plugins directory and run Bukkit in such a way that allows you to put Clojure and these plugins on the class path. A Windows batch file for doing this could look like this.</p>
+<div class='highlight'><pre><code class='clj'><span class='nv'>java</span> <span class='nv'>-cp</span> <span class='nv'>C</span><span class='err'>:</span><span class='sc'>\U</span><span class='nv'>sers</span><span class='sc'>\R</span><span class='nv'>yan</span><span class='sc'>\.</span><span class='nv'>m2</span><span class='sc'>\r</span><span class='nv'>epository</span><span class='sc'>\o</span><span class='nv'>rg</span><span class='sc'>\c</span><span class='nv'>lojure</span><span class='sc'>\c</span><span class='nv'>lojure</span><span class='sc'>\1</span><span class='nv'>.4.0</span><span class='sc'>\c</span><span class='nv'>lojure-1.4.0.jar</span><span class='c1'>;E:\Games\Bukkit\plugins\*;craftbukkit-1.4.7-R0.1.jar org.bukkit.craftbukkit.Main</span>
+<span class='nv'>PAUSE</span>
+</code></pre></div>
+<p>With any luck, you&#8217;re now writing Bukkit plugins in Clojure without any elaborate hacks. The code for my plugin that I talked about in this write up is available on <a href='https://github.com/ryancole/com.rycole.bukkit.simple'>github</a>.</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
