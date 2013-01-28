@@ -33,6 +33,10 @@ a {
   color: #0881b3;
 }
 
+.container {
+  padding-top: 24px;
+}
+
 .left-side h2 {
   color: #666;
 }
