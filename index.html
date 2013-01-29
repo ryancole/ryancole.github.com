@@ -4,8 +4,8 @@ title: blog entries
 ---
 <ul class="entries">
   {% for entry in site.posts %}
-  <a href="{{ entry.url }}">
-    <li class="entry">
+  <a href="{{ entry.url }}" class="entry">
+    <li>
       <h2>{{ entry.title }} <small>posted on {{ entry.date | date:"%b %d, %Y" }}</small></h2>
       <div class="hidden-phone">{{ entry.content | truncatewords:50 }}</div>
     </li>
