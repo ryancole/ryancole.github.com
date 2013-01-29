@@ -80,6 +80,13 @@ a {
   background-size: cover;
   background-repeat: no-repeat;
   background-image: url('/static/img/photo.jpeg');
+  -webkit-transform-style: preserve-3d;
+  -webkit-transition: 0.5s;
+  border: 1px solid #666;
+}
+
+.left-side a:hover #my-face {
+  -webkit-transform: rotateY(180deg);
 }
 
 @media (max-width: 767px) {
