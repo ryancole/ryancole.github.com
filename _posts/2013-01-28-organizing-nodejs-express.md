@@ -13,7 +13,7 @@ The following sequence of commands became burned into my mind.
 {% highlight bash %}
 $ mkdir next-big-site; cd next-big-site
 $ mkdir src; mkdir bin; mkdir src/routes
-$ touch bin/next-big-site.js; touch src/server.js; src/routes/index.js
+$ touch bin/next-big-site.js; touch src/server.js; touch src/routes/index.js
 $ mkdir src/routes/posts; touch src/routes/posts/index.js
 {% endhighlight %}
 
