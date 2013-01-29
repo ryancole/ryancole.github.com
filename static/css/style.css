@@ -81,3 +81,14 @@ a {
   background-repeat: no-repeat;
   background-image: url('/static/img/photo.jpeg');
 }
+
+@media (max-width: 767px) {
+  .left-side {
+    text-align: center;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .right-side {
+    margin-top: 2em;
+  }
+}
