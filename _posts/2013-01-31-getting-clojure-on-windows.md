@@ -8,7 +8,7 @@ I recently saw a posting to the Clojure mailing list in which people were having
 
 Step number one is to [download the JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html). I've used both version `1.6` and `1.7` with success. Install the JDK, but when it asks if you'd also like to install the JRE you can say no. You can install the JRE if you like, but you'll have to adjust your `$PATH` variable to account for that. So, install the JDK and then put the path to the `bin` directory, inside of the directory where you installed the JDK, on your `$PATH`.
 
-{% highlight bash %}
+{% highlight bat %}
 $PATH;E:\Programs\Java\jdk1.6.0_37\bin
 {% endhighlight %}
 
@@ -20,19 +20,19 @@ You should now be able to open a command prompt and type `javac -version` and `j
 
 Package managers really help to make things easy. [Leiningen](http://leiningen.org/) is no exception. Leiningen will even take care of downloading Clojure for you. So, to "install" Leiningen, download the `.bat` script from [the website](http://leiningen.org/) and put it in a directory on your `$PATH`.
 
-{% highlight bash %}
+{% highlight bat %}
 $PATH;E:\Programs\Java\jdk1.6.0_37\bin;E:\Programs\Leiningen
 {% endhighlight %}
 
 Leiningen also depends on `wget` or `curl`. I prefer `curl`, but regardless, [download](http://curl.haxx.se/download.html) one or the other and also place it on a directory on your `$PATH`.
 
-{% highlight bash %}
+{% highlight bat %}
 $PATH;E:\Programs\Java\jdk1.6.0_37\bin;E:\Programs\Leiningen;E:\Programs\Curl
 {% endhighlight %}
 
 That's the end of the `$PATH` configuration. You should be able to open a command prompt and run Leiningen's self install process.
 
-{% highlight bash %}
+{% highlight bat %}
 > lein self-install
 {% endhighlight %}
 
@@ -42,7 +42,7 @@ You should now have a full functional Leiningen install at your disposal.
 
 To mess around inside a Clojure REPL, you can use Leiningen to set one up for you.
 
-{% highlight bash %}
+{% highlight bat %}
 > lein repl
 {% endhighlight %}
 
