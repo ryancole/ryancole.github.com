@@ -17,14 +17,6 @@
         ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
-      
-      var disqus_shortname = 'rycolecom';
-
-      (function() {
-          var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-          dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-          (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-      })();
     
     </script>
   </head>
@@ -39,9 +31,6 @@
         <div class="span8 right-side entry-content">
           {{ content }}
         </div>
-      </div>
-      <div class="row comments">
-          <div class="span8 offset4" id="disqus_thread"></div>
       </div>
     </div>
   </body>
