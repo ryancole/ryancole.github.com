@@ -42,6 +42,10 @@ a {
   color: #666;
 }
 
+.left-side a {
+  text-decoration: none;
+}
+
 .right-side {
   margin-top: 133px;
 }
