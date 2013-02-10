@@ -1,0 +1,13 @@
+---
+layout: entry
+title: How to carry your team in League of Legends
+---
+For those who are not familiar with [League of Legends](http://leagueoflegends.com), it's an insanely popular and competitive online computer game. In the game, you're placed on a team of five and your team's task is to outplay an opposing team of five. Generally, everybody in the game is randomly placed in that game, so there is no real opportunity to build any sort of team chemistry. As a member of your team, you have a few seconds to coordinate which team roles will be played by which team member. Once that is decided, the only remaining task is to work together and win the game.
+
+For those who are familiar with the game, you already know that getting your team to play together can be *next to impossible*. Toxic players will emerge as soon as something goes wrong. They will begin criticising other players for making mistakes, or they will intentionally become uncooperative and make it difficult for their own team to secure a victory. A good player can sometimes counteract these types of toxic players, but rarely does that happen.
+
+So, the real strategy for carrying your team in League of Legends is to make sure your team does not feel the need to turn into those toxic, angry players. Even when your team is down by 10 kills, even when your team just lost a fight for Baron, even when your bottom lane duo queue group is feeding kills to the enemy team -- help your team remain positive. When something good happens, simply give a quick `good job` in team chat. Whe somebody bad happens, raise the moral by saying something like `it's ok, I think we can win this`. If your team is becoming hopeless and just aimlessly roaming the map, try to call some plays and direct them towards objectives, like towers or dragon. If a player does become toxic, do not fight back, just continue farming and trying to be positive. Even the toxic players in your game are there to try to win and if you just ignore them while they're raging then they're likely to at least continue trying to win.
+
+Bringing positivity to your team in the face of an angry team member, or up against a large kill-to-death ratio, is a challenge against yourself. It may sound dumb and it may seem like something that would not truly impact the outcome of the game, but it does. So, pick a champion and a lane that you're comfortable with and go into your ranked games with a positive mindset. If you don't think you can do that, then take break for a few hours or days and come back when you're less frustrated.
+
+This is how you carry your team in League of Legends.
