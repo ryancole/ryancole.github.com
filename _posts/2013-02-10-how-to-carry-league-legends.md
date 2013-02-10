@@ -2,7 +2,7 @@
 layout: entry
 title: How to carry your team in League of Legends
 ---
-For those who are not familiar with [League of Legends](http://leagueoflegends.com), it's an insanely popular and competitive online computer game. In the game, you're placed on a team of five and your team's task is to outplay an opposing team of five. Generally, everybody in the game is randomly placed in that game, so there is no real opportunity to build any sort of team chemistry. As a member of your team, you have a few seconds to coordinate which team roles will be played by which team member. Once that is decided, the only remaining task is to work together and win the game.
+For those who are not familiar with League of Legends, it's an insanely popular and competitive online computer game. In the game, you're placed on a team of five and your team's task is to outplay an opposing team of five. Generally, everybody in the game is randomly placed in that game, so there is no real opportunity to build any sort of team chemistry. As a member of your team, you have a few seconds to coordinate which team roles will be played by which team member. Once that is decided, the only remaining task is to work together and win the game.
 
 For those who are familiar with the game, you already know that getting your team to play together can be *next to impossible*. Toxic players will emerge as soon as something goes wrong. They will begin criticising other players for making mistakes, or they will intentionally become uncooperative and make it difficult for their own team to secure a victory. A good player can sometimes counteract these types of toxic players, but rarely does that happen.
 
