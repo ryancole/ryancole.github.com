@@ -10,7 +10,7 @@
     <meta name="copyright" content="&copy; Copyright 2013" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="A blog, written by developer Ryan Cole, covering programming, technology and startups." />
+    <meta name="description" content="{{ page.content | truncatewords:20 }}" />
     
     <meta name="twitter:card" content="summary">
     <meta name="twitter:site" content="@_ryancole">
@@ -54,6 +54,7 @@
           <a href="/"><div id="my-face"></div></a>
           <h1>{{ page.title }}</h1>
           <h2>{{ page.date | date:"%b %d, %Y" }}</h2>
+          <h3>by <a target="_blank" href="http://twitter.com/_ryancole">Ryan Cole</a></h3>
         </div>
         <div class="span8 right-side entry-content">
           {{ content }}
