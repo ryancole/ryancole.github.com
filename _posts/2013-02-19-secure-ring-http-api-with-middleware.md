@@ -41,3 +41,21 @@ The expansion result of that `->` macro would look like this.
 Along that line of thought, this means that the order in which you specify the middleware functions matters.
 
 If you run this Ring application, you'll see that you should get an HTTP `403` error if you make a request without a header named `token`. If you provide the `token` header then you will receive a response as expected.
+
+## The next steps
+
+Obviously this is not actually secured. You can easily build upon this and add more middleware that checks a database for the given access token and forwards an adjusted request map, containing the requesting users' data, to your request handlers.
+
+{% highlight clojure %}
+(defn append-user-data [handler]
+  (fn [request]
+    (clutch/with-db database-address
+      (let [access-token (get-in request [:headers "token"])
+            view-data (clutch/get-view "api" "users-by-token" {:keys [access-token]})]
+        (if (= 1 (count view-data))
+        	(handler (assoc request :api-user (:value (first view-data))))
+          {:status 403
+           :body "Invalid access token"})))))
+{% endhighlight %}
+
+This is just an example, but from here you can hopefully begin to see how an authorization implementation would begin to take shape.
