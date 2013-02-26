@@ -105,12 +105,16 @@ a {
   background-repeat: no-repeat;
   box-shadow: 0 0 5px #000 inset, 0 0 5px #000;
   background-image: url('/static/img/photo.jpeg');
-  transform-style: preserve-3d;
   transition: 0.5s;
+  -webkit-transform-style: preserve-3d;
 }
 
 .left-side a:hover #my-face {
   transform: rotateY(180deg);
+  -ms-transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
+  -o-transform: rotateY(180deg);
+  -moz-transform: rotateY(180deg);
 }
 
 @media (max-width: 767px) {
