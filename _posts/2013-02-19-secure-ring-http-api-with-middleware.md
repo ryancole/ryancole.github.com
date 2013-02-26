@@ -8,7 +8,7 @@ In the case of a simple HTTP-based API, one might want to check all incoming req
 
 ## Requiring an access token
 
-A Ring middleware function is simply a function that *returns* a handler function. Your main Ring routes are provided as a parameter to each middleware function. So, you have the option to halt the flow of the request in each middleware, and return an error code, or to allow the flow to continue by calling the given handler. Lets take a look at a middleware function that checks for an access token inside of an HTTP header.
+A Ring middleware function is simply a function that *returns* a handler function. Your main Ring routes are provided as a parameter to each middleware function. So, you have the option to halt the flow of the request in each middleware, and return an error code, or to allow the flow to continue by calling the given handler. Let's take a look at a middleware function that checks for an access token inside of an HTTP header.
 
 {% highlight clojure %}
 (defn wrap-require-token [handler]
@@ -19,7 +19,7 @@ A Ring middleware function is simply a function that *returns* a handler functio
        :body "No access token provided"})))
 {% endhighlight %}
 
-This is a very simple middleware. It's a common convention to prefix your middleware names with `wrap-`. This function checks for a `token` key in the headers map, within the given request map. If `token` is present, it continue on to the next middleware. If `token` is not present, it returns an HTTP `403` error.
+This is a very simple middleware. It's a common convention to prefix your middleware names with `wrap-`. This function checks for a `token` key in the headers map, within the given request map. If `token` is present, it continues on to the next middleware. If `token` is not present, it returns an HTTP `403` error.
 
 ## Using middleware functions
 
