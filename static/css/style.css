@@ -114,11 +114,6 @@ a {
 
 .left-side a:hover #my-face {
   background-image: url('/static/img/pet.jpeg');
-  transition: 0.5s;
-  -o-transition: 0.5s;
-  -ms-transition: 0.5s;
-  -moz-transition: 0.5s;
-  -webkit-transition: 0.5s;
 }
 
 @media (max-width: 767px) {
