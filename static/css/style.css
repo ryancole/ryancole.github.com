@@ -8,9 +8,14 @@
   src: url('/static/font/chunk.otf');
 }
 
+@font-face {
+  font-family: 'Myriad Pro';
+  src: url('/static/font/myriadpro.otf');
+}
+
 html {
   color: #111;
-  font-family: 'Georgia', serif;
+  font-family: 'Myriad Pro';
 }
 
 code {
