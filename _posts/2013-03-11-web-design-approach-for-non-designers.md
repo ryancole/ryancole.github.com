@@ -16,7 +16,8 @@ I've actually been messing around with the front-end-first approach and I think 
 
 1. You can get right to the design process, using static HTML, CSS and JS.
 2. Forces you to focus on design without being distracted by back-end coding.
-3. Something else, because a list can't just have 2 items.
+3. It gives you something visual to show to your non-coder friends who could care less about your awesome distributed and load balanced back-end that could handle up to a billion requests per second.
+4. Something else, because the longer the list the better.
 
 I have not proven this yet, but I have a feeling it might even promote a better workflow for growing into a JavaScript-heavy web application, using Backbone and stuff, if that's your thing.
 
