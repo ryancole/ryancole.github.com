@@ -12,7 +12,7 @@ I recently realized that 99% of the websites I write, in this back-end-first fas
 
 I'm pretty sure I read the back side of Eric Ries' book about being lean at some point, so I definitely know a thing or two about failing fast. I don't think I was failing fast enough with my back-end-first approach.
 
-I've actually been messing around with the front-end-first approach and I think it works out nicely. I find that I get to spend more quality time, without being frustrated about design, on the design up-front. This has resulted in me actually reaching a design that I'm happy with, at which point I can then move to back-end coding. Take note of the following points.
+I've actually been messing around with the front-end-first approach and I think it works out nicely. I find that I get to spend more quality time, without being frustrated about design, on the design up-front. Because I am not a designer, the design step is where I generally burn out the fastest, and if I leave that step until after I've already put in a good amount of coding time then I definitely burn out even faster. Taking the design head-on allows me to work on it for longer periods of time without getting frustrated and burning out. This has resulted in me actually reaching a design that I'm happy with, at which point I can then move to back-end coding. Take note of the following points.
 
 1. You can get right to the design process, using static HTML, CSS and JS.
 2. Forces you to focus on design without being distracted by back-end coding.
