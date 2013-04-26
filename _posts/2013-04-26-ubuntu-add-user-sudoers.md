@@ -1,6 +1,6 @@
 ---
 layout: entry
-title: test wtf
+title: "Note to self: How to add an Ubuntu user to sudoers"
 ---
 Some server hosting providers, such as Linode, start you out with a root account when choosing to use Ubuntu. I think the standard Ubuntu server installer does not create a root account, but instead does the following for you. Anyway, it is noted here that in order to add a user, on Ubuntu, to the sudoers list, all you have to do is the following:
 
