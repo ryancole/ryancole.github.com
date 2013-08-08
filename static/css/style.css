@@ -86,6 +86,10 @@ a {
   border-top: 1px solid #eee;
 }
 
+#page-header {
+  text-align: center;
+}
+
 #my-face {
   width: 113px;
   height: 113px;
@@ -101,17 +105,4 @@ a {
   -ms-transition: 0.5s;
   -moz-transition: 0.5s;
   -webkit-transition: 0.5s;
-}
-
-@media (max-width: 767px) {
-
-  .left-side {
-    text-align: center;
-    border-bottom: 1px solid #eee;
-  }
-  
-  .right-side {
-    margin-top: 2em;
-  }
-  
 }
