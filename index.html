@@ -7,10 +7,10 @@ description: rycole.com is a blog about programming, technology and startups.
   {% for entry in site.posts %}
   <a href="{{ entry.url }}" class="entry">
     <li class="row">
-        <div class="span3">
+        <div class="span2">
             <h3>{{ entry.date | date:"%b %d, %Y" }}</h3>
         </div>
-        <div class="span5">
+        <div class="span6">
             <h2>{{ entry.title }}</h2>
             <div class="hidden-phone">{{ entry.content | truncatewords:50 }}</div>
         </div>
