@@ -51,18 +51,20 @@
   <body>
     <div class="container">
       <div class="row">
-        <div class="span4 left-side">
+        <div class="span8 offset2">
           <a href="/"><div id="my-face"></div></a>
           <h1>{{ page.title }}</h1>
           <h2>{{ page.date | date:"%b %d, %Y" }}</h2>
           <h3>by <a target="_blank" href="http://twitter.com/_ryancole">Ryan Cole</a></h3>
         </div>
-        <div class="span8 right-side entry-content">
+      </div>
+      <div class="row">
+        <div class="span8 offset2 entry-content">
           {{ content }}
         </div>
       </div>
       <div class="row comments">
-        <div class="offset4 span8" id="disqus_thread"></div>
+        <div class="offset8 offset2" id="disqus_thread"></div>
       </div>
     </div>
   </body>

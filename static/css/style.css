@@ -50,27 +50,6 @@ a {
   padding-top: 24px;
 }
 
-.left-side h2 {
-  color: #666;
-}
-
-.left-side a {
-  text-decoration: none;
-}
-
-.right-side {
-  margin-top: 133px;
-}
-
-.right-side p {
-  font-size: 1.25em;
-  line-height: 2em;
-}
-
-.right-side.entry-content h2 {
-  margin: 2em 0em;
-}
-
 .entries {
   padding-left: 0px;
   list-style-type: none;
@@ -124,11 +103,8 @@ a {
   -webkit-transition: 0.5s;
 }
 
-.left-side a:hover #my-face {
-  background-image: url('/static/img/pet.jpeg');
-}
-
 @media (max-width: 767px) {
+
   .left-side {
     text-align: center;
     border-bottom: 1px solid #eee;
@@ -137,4 +113,5 @@ a {
   .right-side {
     margin-top: 2em;
   }
+  
 }
