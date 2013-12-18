@@ -5,6 +5,10 @@ html {
   font-family: 'Open Sans', sans-serif;
 }
 
+code {
+  background-color: #f3f9d2;
+}
+
 pre {
   margin: 2em 0em;
   overflow-x: auto;
