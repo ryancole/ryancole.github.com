@@ -1,19 +1,20 @@
 ---
 layout: default
-title: Programming, Technology and Startups
-description: rycole.com is a blog about programming, technology and startups.
+title: Programming, Technology and Gaming
+description: rycole.com is a blog about programming, technology and gaming.
 ---
 <ul class="entries">
   {% for entry in site.posts %}
   <a href="{{ entry.url }}" class="entry">
-    <li class="row">
-        <div class="span2">
-            <h2>{{ entry.date | date:"%b %d, %Y" }}</h2>
+    <li>
+      <div class="row">
+        <div class="col-sm-4">
+            <h3>{{ entry.date | date:"%b %d, %Y" }}</h3>
         </div>
-        <div class="span6">
-            <h2>{{ entry.title }}</h2>
-            <div class="hidden-phone">{{ entry.content | truncatewords:50 }}</div>
+        <div class="col-sm-8">
+            <h3 class="listing-entry-title">{{ entry.title }}</h3>
         </div>
+      </div>
     </li>
   </a>
   {% endfor %}

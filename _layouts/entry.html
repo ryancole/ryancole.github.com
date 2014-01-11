@@ -6,8 +6,8 @@
     <meta name="author" content="Ryan Cole" />
     <meta name="MobileOptimized" content="320">
     <meta name="HandheldFriendly" content="True">
-    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="copyright" content="&copy; Copyright 2013" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="{{ page.content | truncatewords:20 }}" />
@@ -49,22 +49,35 @@
     </script>
   </head>
   <body>
+
     <div class="container">
       <div class="row">
-        <div class="span8 offset2" id="page-header">
-          <a href="/"><div id="my-face"></div></a>
+        <div class="col-sm-8 col-sm-offset-2" id="entry-title">
           <h1>{{ page.title }}</h1>
-          <h3><a target="_blank" href="http://twitter.com/_ryancole">Ryan Cole</a> on {{ page.date | date:"%b %d, %Y" }}</h3>
         </div>
       </div>
       <div class="row">
-        <div class="span8 offset2 entry-content">
-          {{ content }}
+        <div class="col-sm-6 col-sm-offset-3 text-muted" id="entry-date">
+          <p>Posted on {{ page.date | date:"%B %d, %Y" }} &mdash; <a href="/">Home</a></p>
         </div>
       </div>
-      <div class="row comments">
-        <div class="span8 offset2" id="disqus_thread"></div>
+      <div class="row">
+        <div class="col-sm-6 col-sm-offset-3" id="entry-content">
+          {{ content }}
+          <p class="text-muted">&mdash; Ryan Cole</p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-6 col-sm-offset-3 text-muted" id="entry-contact">
+          <p>Find a problem or have a question about this post? Tweet me <a href="http://twitter.com/_ryancole">@_ryancole</a></p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-6 col-sm-offset-3">
+          <div class="well" id="disqus_thread"></div>
+        </div>
       </div>
     </div>
+
   </body>
 </html>

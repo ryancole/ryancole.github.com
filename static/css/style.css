@@ -1,95 +1,60 @@
 @import url(http://fonts.googleapis.com/css?family=Open+Sans:400,700,800);
 
-html {
+body {
   color: #111;
   font-family: 'Open Sans', sans-serif;
 }
 
-code {
-  background-color: #f3f9d2;
+#entry-title, #entry-date, #entry-contact {
+  text-align: center;
+  margin-bottom: 32px;
 }
 
-pre {
-  margin: 2em 0em;
-  overflow-x: auto;
-  padding-left: 15px;
-  background-color: #efefef;
-  border-left: 5px solid #0881b3;
-}
-
-pre code {
-  background-color: inherit;
-}
-
-h1, h2, h3 {
+#entry-title h1 {
+  font-size: 3em;
   font-weight: 800;
+  font-family: 'Open Sans', sans-serif;
 }
 
-a {
-  color: #0881b3;
+#entry-date p, #entry-contact p {
+  padding: 1em 0em;
+  border-top: 1px solid #c2c2c2;
+  border-bottom: 1px solid #c2c2c2;
 }
 
-.container {
-  padding-top: 24px;
+#entry-content {
+  font-size: 1.3em;
+  line-height: 1.5em;
+  margin-bottom: 32px;
+}
+
+#entry-content p, .highlight, #entry-content h2 {
+  margin-bottom: 1.7em;
+}
+
+#entry-content p:last-of-type {
+  margin-bottom: 0em;
+}
+
+#entry-content h2 {
+  font-weight: 800;
+  font-family: 'Open Sans', sans-serif;
 }
 
 .entries {
-  padding-left: 0px;
   list-style-type: none;
 }
 
-.entries a {
+.entries .entry {
   color: #111;
-  text-decoration: none;
-}
-
-.entries a:hover h2 {
-  color: #0881b3;
-}
-
-.entry {
   display: block;
-  margin-bottom: 60px;
+  margin-bottom: 1.7em;
 }
 
-.entry:last-of-type {
-  margin-bottom: 0px;
+.entries .entry .listing-entry-title {
+  font-weight: 800;
 }
 
-.entry h3 {
-  color: #666;
-}
-
-.entry-content {
-  font-size: 20px;
-}
-
-.comments {
-  margin-top: 2em;
-}
-
-.comments #disqus_thread {
-  padding-top: 2em;
-  border-top: 1px solid #eee;
-}
-
-#page-header {
-  text-align: center;
-}
-
-#my-face {
-  width: 113px;
-  height: 113px;
-  margin: 0px auto;
-  border-radius: 50%;
-  background-size: cover;
-  border: 10px solid #fff;
-  background-repeat: no-repeat;
-  box-shadow: 0 0 5px #000 inset, 0 0 5px #000;
-  background-image: url('/static/img/photo.jpeg');
-  transition: 0.5s;
-  -o-transition: 0.5s;
-  -ms-transition: 0.5s;
-  -moz-transition: 0.5s;
-  -webkit-transition: 0.5s;
+.entries h3 {
+  font-family: 'Open Sans', sans-serif;
 }
