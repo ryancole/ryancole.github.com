@@ -140,9 +140,9 @@ Now, our services can use the repositories without having to worry about the und
 {% highlight csharp %}
 using (var context = new DataContext())
 {
-    var characterService = new CharacterService(new CharacterRepository(context));
+    var service = new CharacterService(new CharacterRepository(context));
 
-    characterService.Insert(new Character
+    service.Insert(new Character
     {
         Name = "Ryan",
         Level = 1
