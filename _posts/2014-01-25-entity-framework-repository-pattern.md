@@ -12,7 +12,7 @@ Services are sort of beyond this post, though. I'll mention them again at the en
 
 Lets assume that we're making an application that manages computer game characters. So, we'll start by designing a `Character` entity.
 
-```
+{% highlight csharp %}
 class Character
 {
     public int CharacterId { get; set; }
@@ -21,7 +21,7 @@ class Character
 
     public string Name { get; set; }
 }
-```
+{% endhighlight %}
 
 We'll be storing these entities in a [SQL Server Express LocalDb](http://technet.microsoft.com/en-us/library/hh510202.aspx) database, and using [Entity Framework](http://entityframework.codeplex.com/) as the ORM in this case. While Entity Framework's `DbContext` is technically both a repository and unity of work all in one, keep in mind that the underlying data source could be anything, so we'll continue making our own repository class. Now, we need a repository class that will provide a consistent set of methods for us to insert and retrieve our `Character` entities from `LocalDb`.
 
