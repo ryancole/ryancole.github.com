@@ -36,7 +36,7 @@ interface IRepository<T> where T : class
 }
 {% endhighlight %}
 
-In this generic interface, we've got several generic methods and a property. Right here we can see that anybody who will be accessing our repositories only has to know about calling the `Insert` method, if they wish to create a new `Character`. The won't have to know how to use Entity Framework or SQL queries.
+In this generic interface, we've got several methods. Right here we can see that anybody who will be accessing our repositories only has to know about calling the `Insert` method, if they wish to create a new `Character`. The won't have to know how to use Entity Framework or SQL queries.
 
 An important thing to note about this repository interface is that these methods return `ICollection` instead of `IQueryable`. This prevents implementation details of the underlying ORM from leaking outside of the repository, by forcing the result to be materialzed before leaving the repository. With an `IQueryable`, the users of the repository would still be able to evaluate queries outside of the repository. In cases where a `GetAll` method is required, you may want to consider using `IQueryable` though. Immedietly materializing a `GetAll` method on top of a large data set would be bad. While the goal of the repository is to encapsulate the details of the ORM, it should also take into account performance related issues such as this.
 
