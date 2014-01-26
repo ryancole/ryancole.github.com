@@ -33,14 +33,12 @@ interface IRepository<T> where T : class
     int Count(Expression<Func<T, bool>> predicate);
 
     ICollection<T> Where(Expression<Func<T, bool>> predicate);
-
-    ICollection<T> All { get; }
 }
 {% endhighlight %}
 
 In this generic interface, we've got several generic methods and a property. Right here we can see that anybody who will be accessing our repositories only has to know about calling the `Insert` method, if they wish to create a new `Character`. The won't have to know how to use Entity Framework or SQL queries.
 
-An important thing to note about this repository interface is that these methods return `ICollection` instead of `IQueryable`. This prevents implementation details of the underlying ORM from leaking outside of the repository. With an `IQueryable`, the users of the repository would still be able to evaluate queries outside of the repository.
+An important thing to note about this repository interface is that these methods return `ICollection` instead of `IQueryable`. This prevents implementation details of the underlying ORM from leaking outside of the repository, by forcing the result to be materialzed before leaving the repository. With an `IQueryable`, the users of the repository would still be able to evaluate queries outside of the repository. In cases where a `GetAll` method is required, you may want to consider using `IQueryable` though. Immedietly materializing a `GetAll` method on top of a large data set would be bad. While the goal of the repository is to encapsulate the details of the ORM, it should also take into account performance related issues such as this.
 
 {% highlight csharp %}
 class Repository<T> : IRepository<T> where T : class
@@ -72,16 +70,6 @@ class Repository<T> : IRepository<T> where T : class
 
         return entities.Where(predicate).ToList();
     }
-
-    public ICollection<T> All
-    {
-        get
-        {
-            var entities = m_context.GetDbSet<T>();
-
-            return entities.ToList();
-        }
-    }
 }
 {% endhighlight %}
 
@@ -98,7 +86,7 @@ interface IDataContext : IDisposable
 }
 {% endhighlight %}
 
-Basically, with this interface we are saying that we'd like to give the repository access to Entity Framework, but in an effort to keep things as loosly coupled as possible, we're going to be selective about what we give it.
+Basically, with this interface we are saying that we'd like to give the repository access to Entity Framework, but in an effort to keep things as loosly coupled as possible, we're going to be selective about what we give it. The `SaveChanges` method is provided by `DbContext`. The repository class takes this `IDataContext` as a constructor parameter. As a user of the repository, once we've finished inserting, updating or deleting our records, we would call `SaveChanges` of this context class to actually commit them to the underlying data store. Generally, you'd create a single `IDataContext` class, and use it amongst all needed repositories so that your changes exist within a single transaction so to speak.
 
 {% highlight csharp %}
 class DataContext : DbContext, IDataContext
