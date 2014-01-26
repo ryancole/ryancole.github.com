@@ -135,6 +135,21 @@ class CharacterService : ICharacterService
 }
 {% endhighlight %}
 
-Now, our services can use the repositories without having to worry about the underlying details of them. We could change up our data source, or ORM, and as long as we keep the repository interface the same then the services shouldn't need to change.
+Now, our services can use the repositories without having to worry about the underlying details of them. We could change up our data source, or ORM, and as long as we keep the repository interface the same then the services shouldn't need to change. Finally, just a complete example usage, without using any depndency injection.
+
+{% highlight csharp %}
+using (var context = new DataContext())
+{
+    var characterService = new CharacterService(new CharacterRepository(context));
+
+    characterService.Insert(new Character
+    {
+        Name = "Ryan",
+        Level = 1
+    });
+
+    context.SaveChanges();
+}
+{% endhighlight %}
 
 Hope this helps!
