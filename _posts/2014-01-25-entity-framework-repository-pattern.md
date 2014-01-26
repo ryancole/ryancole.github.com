@@ -25,7 +25,7 @@ class Character
 
 We'll be storing these entities in a [SQL Server Express LocalDb](http://technet.microsoft.com/en-us/library/hh510202.aspx) database, and using [Entity Framework](http://entityframework.codeplex.com/) as the ORM in this case. While Entity Framework's `DbContext` is technically both a repository and unity of work all in one, keep in mind that the underlying data source could be anything, so we'll continue making our own repository class. Now, we need a repository class that will provide a consistent set of methods for us to insert and retrieve our `Character` entities from `LocalDb`.
 
-```
+{% highlight csharp %}
 interface IRepository<T> where T : class
 {
     T Insert(T entity);
@@ -36,13 +36,13 @@ interface IRepository<T> where T : class
 
     ICollection<T> All { get; }
 }
-```
+{% endhighlight %}
 
 In this generic interface, we've got several generic methods and a property. Right here we can see that anybody who will be accessing our repositories only has to know about calling the `Insert` method, if they wish to create a new `Character`. The won't have to know how to use Entity Framework or SQL queries.
 
 An important thing to note about this repository interface is that these methods return `ICollection` instead of `IQueryable`. This prevents implementation details of the underlying ORM from leaking outside of the repository. With an `IQueryable`, the users of the repository would still be able to evaluate queries outside of the repository.
 
-```
+{% highlight csharp %}
 class Repository<T> : IRepository<T> where T : class
 {
     private readonly IDataContext m_context;
@@ -83,24 +83,24 @@ class Repository<T> : IRepository<T> where T : class
         }
     }
 }
-```
+{% endhighlight %}
 
 The actual implementation of the repository contains all of the underlying data source adapter-specific logic required to map data from the data source to the business entities. I've only got a few example methods here, but it shows how you'd provide a generic way to use Entity Framework, while allowing for some flexibility with your queries, specifically the `Where` method and its' `predicate` parameter.
 
 The constructor for the repository expects an `IDataContext`. This could just be the `DbContext` itself, but in this example `IDataContext` is another interface of ours. This is Entity Framework specific, so I'm not going to go into much detail on it
 
-```
+{% highlight csharp %}
 interface IDataContext : IDisposable
 {
     int SaveChanges();
 
     IDbSet<T> GetDbSet<T>() where T : class;
 }
-```
+{% endhighlight %}
 
 Basically, with this interface we are saying that we'd like to give the repository access to Entity Framework, but in an effort to keep things as loosly coupled as possible, we're going to be selective about what we give it.
 
-```
+{% highlight csharp %}
 class DataContext : DbContext, IDataContext
 {
     public IDbSet<T> GetDbSet<T>() where T : class
@@ -108,11 +108,11 @@ class DataContext : DbContext, IDataContext
         return Set<T>();
     }
 }
-```
+{% endhighlight %}
 
 Now, with our repository in place, we're free to start using it. This is an example of a service that would use the repository. It's using the [IoC](http://en.wikipedia.org/wiki/Inversion_of_control) pattern, so the repository in this case has already been instanciated, with the given `IDataContext`, and is being passed into the service through the constructor.
 
-```
+{% highlight csharp %}
 class CharacterService : ICharacterService
 {
     private readonly IRepository<Character> m_characters;
@@ -145,7 +145,7 @@ class CharacterService : ICharacterService
 
     #endregion
 }
-```
+{% endhighlight %}
 
 Now, our services can use the repositories without having to worry about the underlying details of them. We could change up our data source, or ORM, and as long as we keep the repository interface the same then the services shouldn't need to change.
 
