@@ -152,4 +152,4 @@ using (var context = new DataContext())
 }
 {% endhighlight %}
 
-Hope this helps! I also have an entire project on Github in which this pattern is implemented. You can check it out [here](https://github.com/ryancole/Warcraft).
+Hope this helps!
