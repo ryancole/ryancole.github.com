@@ -1,6 +1,7 @@
 ---
 layout: entry
 title: "Implementing the Repository Pattern with Entity Framework"
+image: "/static/img/20140125.jpg"
 ---
 The repository pattern seems to be pretty common within the C# ecosystem. The crux of the pattern is that there should be a layer inbetween the data source layer and the business layers - that layer being the repositories. The job of a repository is to provide methods that query the underlying data source, encapsulating any ORM logic, and return business entities. Regardless of what the data source actually is, the repository should provide a common interface for extracting business entities from it.
 
