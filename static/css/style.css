@@ -5,6 +5,13 @@ body {
   font-family: 'Open Sans', sans-serif;
 }
 
+#entry-title {
+  margin-top: 32px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
 #entry-title, #entry-date, #entry-contact {
   text-align: center;
   margin-bottom: 32px;
