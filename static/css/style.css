@@ -7,7 +7,7 @@ body {
 
 #entry-title {
   margin-top: 32px;
-  background-size: cover;
+  background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }
