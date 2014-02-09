@@ -13,3 +13,9 @@ p {
   line-height: 30px;
 
 }
+
+h1, h2, p {
+
+  width: 700px;
+
+}
