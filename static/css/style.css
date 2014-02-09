@@ -8,6 +8,12 @@ body {
 
 }
 
+pre {
+
+  margin: 0px;
+
+}
+
 h1, h2, p {
 
   width: 700px;
