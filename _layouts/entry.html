@@ -11,34 +11,34 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="{{ page.content | truncatewords:20 }}" />
-    
+
     <meta name="twitter:card" content="summary">
     <meta name="twitter:site" content="@_ryancole">
     <meta name="twitter:creator" content="@_ryancole">
     <meta name="twitter:url" content="http://rycole.com{{ page.url }}">
     <meta name="twitter:title" content="{{ page.title }}">
     <meta name="twitter:description" content="{{ page.content | truncatewords:20 }}">
-    
+
     <title>{{ page.title }} &mdash; rycole.com</title>
-    
+
     <link rel="stylesheet" href="/static/css/bootstrap.min.css" />
     <link rel="stylesheet" href="/static/css/pygments.css" />
     <link rel="stylesheet" href="/static/css/style.css" />
     <link rel="alternate" type="application/rss+xml" title="rycole.com rss feed" href="http://rycole.com/rss.xml" />
     <link rel="SHORTCUT ICON" href="/static/img/favicon.ico" />
-    
+
     <script type="text/javascript">
-    
+
       var _gaq = _gaq || [];
       _gaq.push(['_setAccount', 'UA-38004938-1']);
       _gaq.push(['_trackPageview']);
-    
+
       (function() {
         var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
         ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
-      
+
       var disqus_shortname = 'rycolecom';
 
       (function() {
@@ -46,7 +46,7 @@
         dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
         (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
       })();
-    
+
     </script>
   </head>
   <body>
@@ -58,23 +58,23 @@
         </div>
       </div>
       <div class="row">
-        <div class="col-sm-6 col-sm-offset-3 text-muted" id="entry-date">
+        <div class="col-sm-8 col-sm-offset-2 text-muted" id="entry-date">
           <p>Posted on {{ page.date | date:"%B %d, %Y" }} &mdash; <a href="/">Home</a></p>
         </div>
       </div>
       <div class="row">
-        <div class="col-sm-6 col-sm-offset-3" id="entry-content">
+        <div class="col-sm-8 col-sm-offset-2" id="entry-content">
           {{ content }}
           <p class="text-muted">&mdash; Ryan Cole</p>
         </div>
       </div>
       <div class="row">
-        <div class="col-sm-6 col-sm-offset-3 text-muted" id="entry-contact">
+        <div class="col-sm-8 col-sm-offset-2 text-muted" id="entry-contact">
           <p>Find a problem or have a question about this post? Tweet me <a href="http://twitter.com/_ryancole">@_ryancole</a></p>
         </div>
       </div>
       <div class="row">
-        <div class="col-sm-6 col-sm-offset-3">
+        <div class="col-sm-8 col-sm-offset-2">
           <div class="well" id="disqus_thread"></div>
         </div>
       </div>
