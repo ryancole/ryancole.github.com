@@ -28,6 +28,7 @@ h1, h2, p {
 
   width: 700px;
   margin: 1em auto;
+  border-left: 5px solid #9ebae9;
   background-color: #eceeee;
 
 }
