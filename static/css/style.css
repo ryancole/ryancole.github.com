@@ -19,5 +19,6 @@ h1, h2, p {
 #disqus_thread {
 
   width: 700px;
+  margin: 1em auto;
 
 }
