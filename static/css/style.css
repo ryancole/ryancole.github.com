@@ -22,12 +22,12 @@ pre code {
 
 }
 
-h1, h2, p {
+h1, h2, p, ul {
 
   width: 700px;
+  margin: 1em auto;
   font-size: 20px;
   line-height: 30px;
-  margin: 1em auto;
 
 }
 
