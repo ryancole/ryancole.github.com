@@ -28,7 +28,7 @@ h1, h2, p {
 
   width: 700px;
   margin: 1em auto;
-  padding: 1em 0;
+  padding: 1em 0.5em;
   background-color: #eceeee;
 
 }
