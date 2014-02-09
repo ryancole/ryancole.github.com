@@ -17,5 +17,6 @@ p {
 h1, h2, p {
 
   width: 700px;
+  margin: 0px auto;
 
 }
