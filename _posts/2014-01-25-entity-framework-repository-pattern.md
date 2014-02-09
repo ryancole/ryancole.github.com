@@ -98,7 +98,7 @@ class DataContext : DbContext, IDataContext
 }
 {% endhighlight %}
 
-Now, with our repository in place, we're free to start using it. This is an example of a service that would use the repository. It's using the [IoC](http://en.wikipedia.org/wiki/Inversion_of_control) pattern, so the repository in this case has already been instanciated, with the given `IDataContext`, and is being passed into the service through the constructor.
+Now, with our repository in place, we're free to start using it. This is an example of a service that would use the repository. It's using the [Inversion of Control](http://en.wikipedia.org/wiki/Inversion_of_control) pattern, so the repository in this case has already been instanciated, with the given `IDataContext`, and is being passed into the service through the constructor.
 
 {% highlight csharp %}
 class CharacterService : ICharacterService
