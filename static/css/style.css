@@ -2,8 +2,9 @@
 body {
 
   color: #424242;
-  background-color: #f5f6f6;
+  margin: inherit 0px;
   font-family: "Courier New", courier, monospace;
+  background-color: #f5f6f6;
 
 }
 
@@ -12,13 +13,6 @@ h1, h2, p {
   width: 700px;
   font-size: 20px;
   line-height: 30px;
-  margin: 1em auto;
-
-}
-
-pre {
-
-  width: 700px;
   margin: 1em auto;
 
 }
@@ -32,7 +26,8 @@ pre {
 
 .highlight {
 
-  width: 100%;
+  width: 700px;
+  margin: 1em auto;
   padding: 1em 0;
   background-color: #eceeee;
 
