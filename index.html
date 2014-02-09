@@ -5,6 +5,9 @@ description: rycole.com is a blog about programming, technology and gaming.
 ---
 {% for post in site.posts %}
 
+  <span>"{{ currentyear }}"</span>
+  <span>"{{ year }}"</span>
+
   {% capture currentyear %}
     {{ post.date | date: "%B %Y" }}
   {% endcapture %}
