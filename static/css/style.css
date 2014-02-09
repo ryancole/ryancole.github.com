@@ -6,3 +6,10 @@ body {
   font-family: "Courier New", courier, monospace;
 
 }
+
+p {
+
+  font-size: 20px;
+  line-height: 30px;
+
+}
