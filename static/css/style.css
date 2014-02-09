@@ -18,6 +18,7 @@ pre code {
 
   display: block;
   padding: 10px;
+  word-wrap: break-word;
 
 }
 
