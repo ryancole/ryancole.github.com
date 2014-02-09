@@ -8,9 +8,7 @@ description: rycole.com is a blog about programming, technology and gaming.
   <span>"{{ currentyear }}"</span>
   <span>"{{ year }}"</span>
 
-  {% capture currentyear %}
-    {{ post.date | date: "%B %Y" }}
-  {% endcapture %}
+  {% capture currentyear %}{{ post.date | date: "%B %Y" }}{% endcapture %}
 
   {% if currentyear != year %}
 
@@ -21,9 +19,7 @@ description: rycole.com is a blog about programming, technology and gaming.
     <h1>{{ currentyear }}</h1>
     <ul>
 
-    {% capture year %}
-      {{ currentyear }}
-    {% endcapture %}
+    {% capture year %}{{ currentyear }}{% endcapture %}
 
   {% endif %}
 
