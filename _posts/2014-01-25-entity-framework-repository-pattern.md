@@ -152,4 +152,4 @@ using (var context = new DataContext())
 }
 {% endhighlight %}
 
-Hope this helps!
+Hope this helps! An example implementation of the code described in this post can be found on Github, at <https://github.com/ryancole/RepositoryExample>.

@@ -1,9 +1,10 @@
+@import url(http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,600,300,700,800);
 
 body {
 
   color: #424242;
   margin: inherit 0px;
-  font-family: "Courier New", courier, monospace;
+  font-family: 'Open Sans', sans-serif;
   background-color: #f5f6f6;
 
 }
@@ -22,13 +23,17 @@ pre code {
 
 }
 
-h1, h2, p, ul {
+h1, h2, h3, p, ul {
 
   width: 700px;
   margin: 1em auto;
   font-size: 20px;
   line-height: 30px;
 
+}
+
+ul {
+  list-style-position: inside;
 }
 
 #disqus_thread {
@@ -44,5 +49,20 @@ h1, h2, p, ul {
   margin: 1em auto;
   border-left: 5px solid #9ebae9;
   background-color: #eceeee;
+
+}
+
+.post-title {
+
+  font-weight: 800;
+  text-transform: uppercase;
+
+}
+
+.post-date {
+
+  font-size: 1em;
+  font-weight: 800;
+  text-transform: uppercase;
 
 }
