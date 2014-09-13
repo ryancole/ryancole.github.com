@@ -12,7 +12,7 @@ Services are sort of beyond this post, though. I'll mention them again at the en
 
 Lets assume that we're making an application that manages computer game characters. So, we'll start by designing a `Character` entity.
 
-{% highlight csharp %}
+```csharp
 class Character
 {
     public int CharacterId { get; set; }
@@ -21,11 +21,11 @@ class Character
 
     public string Name { get; set; }
 }
-{% endhighlight %}
+```
 
 We'll be storing these entities in a [SQL Server Express LocalDb](http://technet.microsoft.com/en-us/library/hh510202.aspx) database, and using [Entity Framework](http://entityframework.codeplex.com/) as the ORM in this case. While Entity Framework's `DbContext` is technically both a repository and unity of work all in one, keep in mind that the underlying data source could be anything, so we'll continue making our own repository class. Now, we need a repository class that will provide a consistent set of methods for us to insert and retrieve our `Character` entities from `LocalDb`.
 
-{% highlight csharp %}
+```csharp
 interface IRepository<T> where T : class
 {
     T Insert(T entity);
@@ -34,13 +34,13 @@ interface IRepository<T> where T : class
 
     ICollection<T> Where(Expression<Func<T, bool>> predicate);
 }
-{% endhighlight %}
+```
 
 In this generic interface, we've got several methods. Right here we can see that anybody who will be accessing our repositories only has to know about calling the `Insert` method if they wish to create a new `Character`. The won't have to know how to use Entity Framework or SQL queries.
 
 An important thing to note about this repository interface is that these methods return `ICollection` instead of `IQueryable`. This prevents implementation details of the underlying ORM from leaking outside of the repository, by forcing the result to be materialzed before leaving the repository. With an `IQueryable`, the users of the repository would still be able to evaluate queries outside of the repository. In cases where a `GetAll` method is required, you may want to consider using `IQueryable` though. Immedietly materializing a `GetAll` method on top of a large data set would be bad. While the goal of the repository is to encapsulate the details of the ORM, it should also take into account performance related issues such as this.
 
-{% highlight csharp %}
+```csharp
 class Repository<T> : IRepository<T> where T : class
 {
     private readonly IDataContext m_context;
@@ -71,24 +71,24 @@ class Repository<T> : IRepository<T> where T : class
         return entities.Where(predicate).ToList();
     }
 }
-{% endhighlight %}
+```
 
 The actual implementation of the repository contains all of the underlying data source adapter-specific logic required to map data from the data source to the business entities. I've only got a few example methods here, but it shows how you'd provide a generic way to use Entity Framework, while allowing for some flexibility with your queries, specifically the `Where` method and its' `predicate` parameter.
 
 The constructor for the repository expects an `IDataContext`. This could just be the `DbContext` itself, but in this example `IDataContext` is another interface of ours. This is Entity Framework specific, so I'm not going to go into much detail on it
 
-{% highlight csharp %}
+```csharp
 interface IDataContext : IDisposable
 {
     int SaveChanges();
 
     IDbSet<T> GetDbSet<T>() where T : class;
 }
-{% endhighlight %}
+```
 
 Basically, with this interface we are saying that we'd like to give the repository access to Entity Framework, but in an effort to keep things as loosly coupled as possible, we're going to be selective about what we give it. The `SaveChanges` method is provided by `DbContext`. The repository class takes this `IDataContext` as a constructor parameter. As a user of the repository, once we've finished inserting, updating or deleting our records, we would call `SaveChanges` of this context class to actually commit them to the underlying data store. Generally, you'd create a single `IDataContext` class, and use it amongst all needed repositories so that your changes exist within a single transaction so to speak.
 
-{% highlight csharp %}
+```csharp
 class DataContext : DbContext, IDataContext
 {
     public IDbSet<T> GetDbSet<T>() where T : class
@@ -96,11 +96,11 @@ class DataContext : DbContext, IDataContext
         return Set<T>();
     }
 }
-{% endhighlight %}
+```
 
 Now, with our repository in place, we're free to start using it. This is an example of a service that would use the repository. It's using the [Inversion of Control](http://en.wikipedia.org/wiki/Inversion_of_control) pattern, so the repository in this case has already been instanciated, with the given `IDataContext`, and is being passed into the service through the constructor.
 
-{% highlight csharp %}
+```csharp
 class CharacterService : ICharacterService
 {
     private readonly IRepository<Character> m_characters;
@@ -133,11 +133,11 @@ class CharacterService : ICharacterService
 
     #endregion
 }
-{% endhighlight %}
+```
 
 Now, our services can use the repositories without having to worry about the underlying details of them. We could change up our data source, or ORM, and as long as we keep the repository interface the same then the services shouldn't need to change. Finally, just a complete example usage, without using any depndency injection.
 
-{% highlight csharp %}
+```csharp
 using (var context = new DataContext())
 {
     var service = new CharacterService(new CharacterRepository(context));
@@ -150,6 +150,6 @@ using (var context = new DataContext())
 
     context.SaveChanges();
 }
-{% endhighlight %}
+```
 
 Hope this helps! An example implementation of the code described in this post can be found on Github, at <https://github.com/ryancole/RepositoryExample>.

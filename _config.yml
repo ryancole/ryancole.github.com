@@ -1,4 +1,6 @@
-safe: true
 lsi: false
-pygments: true
+safe: true
 markdown: kramdown
+highlighter: pygments
+kramdown:
+  input: GFM
