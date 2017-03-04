@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-
     <meta charset="utf-8" />
     <meta http-equiv="cleartype" content="on">
 
@@ -18,12 +17,11 @@
 
     <title>{{ page.title }} &mdash; rycole.com</title>
 
-    <link rel="stylesheet" href="/static/css/style.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
     <link rel="alternate" type="application/rss+xml" title="rycole.com rss feed" href="http://rycole.com/rss.xml" />
     <link rel="SHORTCUT ICON" href="/static/img/favicon.ico" />
 
     <script type="text/javascript">
-
       var _gaq = _gaq || [];
       _gaq.push(['_setAccount', 'UA-38004938-1']);
       _gaq.push(['_trackPageview']);
@@ -33,16 +31,18 @@
         ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
-
     </script>
-
   </head>
   <body>
+    <div class="container">
+      <div class="row">
+        <div class="col-8 offset-2">
+          <h1>{{ page.title }}</h1>
+          <h2>Hello, my name is <a href="http://twitter.com/_ryancole">Ryan</a>. This is my blog.</h2>
+        </div>
+      </div>
 
-    <h1 class="post-title">{{ page.title }}</h1>
-    <h2 class="post-date">Hello, my name is <a href="http://twitter.com/_ryancole">Ryan</a>. This is my blog.</h2>
-
-    {{ content }}
-
+      {{ content }}
+    </div>
   </body>
 </html>
