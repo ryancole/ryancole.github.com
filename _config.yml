@@ -1,6 +1,6 @@
 lsi: false
 safe: true
 markdown: kramdown
-highlighter: pygments
+highlighter: rouge
 kramdown:
   input: GFM
