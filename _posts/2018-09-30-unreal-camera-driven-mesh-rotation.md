@@ -1,6 +1,6 @@
 ---
 layout: entry
-title: Note to Self: Camera-driven Mesh Rotation in Unreal Engine
+title: "Note to Self: Camera-driven Mesh Rotation in Unreal Engine"
 ---
 
 The official unreal engine shooter game sample project uses the "floating arms" approach for its first person camera and mesh. The project just uses the default camera created within the default classes provided by the engine - it does not explicitly create its own camera. Player input drives the camera rotation. Camera rotation drives the first person mesh's rotation.
