@@ -5,3 +5,8 @@
 #masthead-sub {
   font-size: 1.5rem;
 }
+
+pre.highlight {
+  padding: 1em;
+  border-radius: 0.3em;
+}
