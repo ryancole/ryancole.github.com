@@ -19,9 +19,11 @@ Visual Studio is probably the most popular Windows-based C++ IDE. Visual Studio 
 
 So why on earth is it that when you try to use Visual Studio to edit an Unreal Engine project you're met with the absolute worst developer experience in existance? These two huge titans of their domain combine to create the worst thing I've ever seen.
 
-Visual Studio is wholely incapable of parsing and providing meaningful intellisense from an Unreal project. Visual Studio also displays false error squiggly lines all over the place. Most, if not all, of these issues seem to stem from Unreal's overzealous use of macros, which seem to absolutely confuse Visual Studio. If you compile and debug your project, everything works fine - Visual Studio is simply confused and is showing you incorrect errors.
+Visual Studio is wholely incapable of parsing and providing meaningful intellisense from an Unreal project. Visual Studio also displays false error squiggly lines all over the place. Most, if not all, of these issues seem to stem from Unreal's overzealous use of macros, which seem to absolutely confuse Visual Studio. If you compile and debug your project, everything works fine - Visual Studio is simply confused and is showing you incorrect or phantom errors.
 
 It's common knowledge that if you're doing Unreal and Visual Studio then you absolutely need to purchase and use a plugin called Visual Assist. VAX is great, but even VAX sometimes can't understand Unreal. There are times where VAX sees certain method as unresolved, etc. VAX is merely a syntax-understander and it cannot get the same level of deep code comprehension that proper intellisense can. It's inferior in ever way. VAX is just more popular because it has some Unreal-specific features and seems to do a better job at syntax highlighting, useage popups, etc. These are all things that Visual Studio should absolutely dominate at - at the very least be able to accomomdate, which it can't.
+
+It absolutely shocks me that if you go onto any Unreal community, everybody is just content with buying VAX. It's like the community has been beaten into submission and no longer hopes for a proper Visual Studio x Unreal dream.
 
 ## Sad
 
