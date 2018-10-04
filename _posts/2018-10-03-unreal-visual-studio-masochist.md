@@ -15,7 +15,7 @@ Do you want to know what the absolute worst developer experience that I've seen 
 
 Unreal Engine is a hugely popular game engine. An absolute boat load of people use it.
 
-Visual Studio is probably the most popular Windows-based C++ IDE. Visual Studio is known for its superb C++ integration, debugging and intellisense.
+Visual Studio is probably the most popular Windows-based C++ IDE. Visual Studio is known for its superb C++ integration, debugging and intellisense. Visual Studio is the recommended product and *user experience* for Unreal.
 
 So why on earth is it that when you try to use Visual Studio to edit an Unreal Engine project you're met with the absolute worst developer experience in existance? These two huge titans of their domain combine to create the worst thing I've ever seen.
 
