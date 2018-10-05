@@ -1,6 +1,6 @@
 ---
 layout: entry
-title: Unreal Engine x Visual Studio = Masochist
+title: Unreal Engine x Visual Studio = Painful
 ---
 
 I've experienced quite a bit of different development environment configurations over the years. Everything from nodejs web projects using webpack and babel, which most people loathe when it comes to configuration, to dotnet projects requiring nuget packages from the official repo and private packages. I've worked on javascript projects that were not within any nodejs / npm environment whatsoever.
@@ -25,7 +25,7 @@ It's common knowledge that if you're doing Unreal and Visual Studio then you abs
 
 It absolutely shocks me that if you go onto any Unreal community, everybody is just content with buying VAX. It's like the community has been beaten into submission and no longer hopes for a proper Visual Studio x Unreal dream.
 
-## Sad
+## Sad :(
 
 I've actually never seen a community of developers put up with such a terrible developer experience as I have when trying to get into Unreal Engine. The Visual Studio + Unreal Engine experience is absolutely trash.
 
