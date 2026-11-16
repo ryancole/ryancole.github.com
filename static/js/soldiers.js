@@ -9,16 +9,39 @@
   var GRAVITY = 0.45;
   var JUMP_VY = -9.6;          // ~100px jump
   var WALK_SPEED = 1.3;
-  var BULLET_SPEED = 7;
   var SIGHT = 420;
   var MAX_FALL = 12;
   var CORPSE_TIME = 240;       // frames a body stays before blinking out (~4s)
-  var FIRE_RANGE = 520;        // shoots at anything this close, any direction
   var SPREAD = 0.08;           // aim wobble in radians
+
+  // Each soldier spawns with one of these at random.
+  var WEAPONS = {
+    rifle:        { color: '#000000', range: 700, speed: 13 },  // single fast, accurate shots
+    machinegun:   { color: '#7c7c7c', range: 230, speed: 6 },   // short-range bursts of 6, more spread
+    flamethrower: { color: '#e45c10', range: 170 },  // short-range continuous fire
+    launcher:     { color: '#007800', range: 400 }   // lobbed grenades that explode
+  };
+  var WEAPON_NAMES = Object.keys(WEAPONS);
+  var GRENADE_SPEED = 9;
+  var GRENADE_GRAVITY = 0.25;
+  var BLAST_RADIUS = 56;
+
+  // Each soldier also spawns with one movement item at random.
+  //   grapple: hook a ledge above and reel up
+  //   jetpack: fly up on a limited tank that refills on the ground
+  //   roll:    dodge-roll through incoming fire (invulnerable while rolling),
+  //            plus a big spinning leap to reach high ledges
+  var MOVES = ['grapple', 'jetpack', 'roll'];
+  var JET_FUEL = 150;          // frames of thrust
+  var JET_THRUST = 0.9;        // upward accel (gravity is 0.45)
+  var JET_MAX_RISE = 5;
+  var ROLL_FRAMES = 22;
+  var ROLL_SPEED = 4.5;
 
   // ---------- sprites (original art, NES-style) ----------
   // Facing right. Three colors per sprite, like an NES sprite palette:
-  // . transparent  S skin  T team color  K black (hair, eye, rifle, belt, boots)
+  // . transparent  S skin  T team color  K black (hair, eye, belt, boots)
+  // G weapon (colored per weapon type)
   var TOP = [
     '....KKK.....',
     '...KKKKK....',
@@ -27,8 +50,8 @@
     '...KSSSS....',
     '....SSS.....',
     '...SSSSS....',
-    '..SSSSSKKKKK',
-    '..SSSSKKKK..',
+    '..SSSSSGGGGG',
+    '..SSSSGGGG..',
     '...SSSS.....',
     '...KKKK.....',
     '...TTTT.....'
@@ -40,23 +63,23 @@
       '....KKK.....',
       '...KKKKK....',
       '.TTTTTTT....',
-      'T..KSSKS..KK',
-      '...KSSSS.KK.',
-      '....SSS.KK..',
-      '...SSSSKK...',
-      '..SSSSSK....',
+      'T..KSSKS..GG',
+      '...KSSSS.GG.',
+      '....SSS.GG..',
+      '...SSSSGG...',
+      '..SSSSSG....',
       '..SSSSS.....',
       '...SSSS.....',
       '...KKKK.....',
       '...TTTT.....'
     ],
     up: [
-      '....KKK..K..',
-      '...KKKKK.K..',
-      '.TTTTTTT.K..',
-      'T..KSSKSKK..',
-      '...KSSSSKK..',
-      '....SSS.SK..',
+      '....KKK..G..',
+      '...KKKKK.G..',
+      '.TTTTTTT.G..',
+      'T..KSSKSGG..',
+      '...KSSSSGG..',
+      '....SSS.SG..',
       '...SSSSSS...',
       '..SSSSSS....',
       '..SSSSS.....',
@@ -73,10 +96,10 @@
       '....SSS.....',
       '...SSSSS....',
       '..SSSSSS....',
-      '..SSSSSKK...',
-      '...SSSS.KK..',
-      '...KKKK..KK.',
-      '...TTTT...KK'
+      '..SSSSSGG...',
+      '...SSSS.GG..',
+      '...KKKK..GG.',
+      '...TTTT...GG'
     ]
   };
   // Where the muzzle is for each aim (art pixels from the sprite's top-left, facing right).
@@ -151,18 +174,23 @@
     return c;
   }
 
-  // SPRITES[team][aim][pose] = [facingLeft, facingRight]
+  // SPRITES[team][weapon][aim][pose] = [facingLeft, facingRight]
   var SPRITES = TEAMS.map(function (team) {
-    var byAim = {};
-    Object.keys(AIMS).forEach(function (aim) {
-      var frames = {};
-      Object.keys(LEGS).forEach(function (k) {
-        var rows = AIMS[aim].concat(LEGS[k]);
-        frames[k] = [buildFrame(rows, team, true), buildFrame(rows, team, false)];
+    var byWeapon = {};
+    WEAPON_NAMES.forEach(function (w) {
+      var palette = { T: team.T, G: WEAPONS[w].color };
+      var byAim = {};
+      Object.keys(AIMS).forEach(function (aim) {
+        var frames = {};
+        Object.keys(LEGS).forEach(function (k) {
+          var rows = AIMS[aim].concat(LEGS[k]);
+          frames[k] = [buildFrame(rows, palette, true), buildFrame(rows, palette, false)];
+        });
+        byAim[aim] = frames;
       });
-      byAim[aim] = frames;
+      byWeapon[w] = byAim;
     });
-    return byAim;
+    return byWeapon;
   });
 
   // ---------- page geometry ----------
@@ -226,6 +254,26 @@
   var soldiers = [];
   var bullets = [];
   var sparks = [];
+  var blasts = [];
+  var tick = 0;                // simulation frame counter
+  var firstBlood = false;
+  var MULTI_WINDOW = 150;      // frames (~2.5s) between kills to chain a multi-kill
+  var STREAKS = {
+    3: 'KILLING SPREE', 5: 'RAMPAGE', 7: 'UNSTOPPABLE', 10: 'GODLIKE', 15: 'LEGENDARY',
+    // ...and then it gets out of hand.
+    20: 'TOUCH GRASS',
+    25: 'CALL YOUR MOTHER',
+    30: 'HR WANTS A WORD',
+    35: 'THIS IS A BLOG',
+    40: 'PLEASE READ MY POSTS',
+    45: 'RYAN IS CONCERNED',
+    50: 'THE PAGE FEARS YOU',
+    55: 'GENEVA IS CALLING',
+    60: 'DELETE THE INTERNET',
+    65: 'ASCENDED TO HTML'
+  };
+  var STREAK_BEYOND = 'SEEK HELP'; // every 5 kills after the last one
+  var MULTIS = { 2: 'DOUBLE KILL', 3: 'TRIPLE KILL' };
   var respawnAt = [0, 0];
 
   function teamSize() {
@@ -268,7 +316,19 @@
       wander: (Math.random() < 0.5 ? -1 : 1),
       wanderT: 0,
       step: Math.random() * 100,
-      shootPose: 0
+      shootPose: 0,
+      kills: 0,
+      weapon: WEAPON_NAMES[Math.floor(Math.random() * WEAPON_NAMES.length)],
+      burst: 0,
+      burstT: 0,
+      move: MOVES[Math.floor(Math.random() * MOVES.length)],
+      fuel: JET_FUEL,
+      jetting: false,
+      jetGoalY: 0,
+      roll: 0,
+      rollDir: 1,
+      rollCooldown: 0,
+      spin: false
     });
   }
 
@@ -306,17 +366,16 @@
     // whatever we're doing with our legs.
     var aimDX = t.x - s.x;
     var aimDY = (t.y - SH * SCALE * 0.55) - (s.y - (SH - 7.5) * SCALE);
-    s.aim = aimPose(aimDX, aimDY);
-    if (s.cooldown <= 0 && Math.hypot(aimDX, aimDY) < FIRE_RANGE) {
-      fire(s, Math.atan2(aimDY, aimDX));
-      s.cooldown = 40 + Math.random() * 45;
-    }
+    attack(s, aimDX, aimDY);
 
+    var w = WEAPONS[s.weapon];
     if (Math.abs(dy) < 20 && Math.abs(dx) < SIGHT) {
-      // Same level: hold position, sometimes hop.
+      // Same level: hold at a good distance for this weapon, sometimes hop.
+      var holdAt = Math.min(SIGHT * 0.6, w.range * 0.75);
+      var minGap = s.weapon === 'launcher' ? 120 : s.weapon === 'flamethrower' ? 30 : 60;
       if (s.ground && s.jumpCooldown <= 0 && Math.random() < 0.006) jump(s);
-      if (Math.abs(dx) > SIGHT * 0.6) s.vx = s.face * WALK_SPEED * 0.5;
-      else if (Math.abs(dx) < 60) s.vx = -s.face * WALK_SPEED * 0.8; // too close: back off, keep aiming
+      if (Math.abs(dx) > holdAt) s.vx = s.face * WALK_SPEED * (holdAt < 200 ? 1 : 0.5);
+      else if (Math.abs(dx) < minGap) s.vx = -s.face * WALK_SPEED * 0.8; // too close: back off, keep aiming
       return;
     }
 
@@ -355,7 +414,7 @@
     }
 
     // Far below the enemy: sometimes grapple straight up instead of hopping.
-    if (t.y - s.y < -160 && s.jumpCooldown <= 0 && Math.random() < 0.02 && throwHook(s, t)) return;
+    if (t.y - s.y < -160 && s.jumpCooldown <= 0 && Math.random() < 0.02 && useMove(s, t)) return;
 
     if (best) {
       var gap = bestX - s.x;
@@ -369,7 +428,7 @@
     }
 
     // Nothing in jump reach (e.g. stranded at the page bottom): grapple up.
-    if (s.jumpCooldown <= 0 && Math.random() < 0.05) throwHook(s, t);
+    if (s.jumpCooldown <= 0 && Math.random() < 0.05) useMove(s, t);
   }
 
   // ---------- grappling hook ----------
@@ -383,7 +442,7 @@
 
   // Pick a ledge above, as close to straight up as possible and as near the
   // enemy's height as possible, and fire the hook at it.
-  function throwHook(s, t) {
+  function ledgeAbove(s, t) {
     var best = null, bestCost = Infinity;
     for (var i = 0; i < platforms.length; i++) {
       var p = platforms[i];
@@ -395,6 +454,54 @@
       var cost = dx * 1.2 + Math.abs(p.top - t.y) * 0.6;
       if (cost < bestCost) { bestCost = cost; best = { x: nx, y: p.top }; }
     }
+    return best;
+  }
+
+  // Get up to a high ledge using whatever movement item this soldier has.
+  function useMove(s, t) {
+    if (s.move === 'grapple') return throwHook(s, t);
+    var goal = ledgeAbove(s, t);
+    if (!goal) return false;
+    if (s.move === 'jetpack') {
+      if (s.fuel < JET_FUEL * 0.5) return false; // wait for a decent tank
+      s.jetting = true;
+      s.jetGoalY = goal.y;
+      s.goalX = goal.x;
+      s.ground = null;
+      s.vy = Math.min(s.vy, -2);
+      s.jumpCooldown = 60;
+      return true;
+    }
+    // roll: a big spinning leap, just high enough to clear the ledge
+    var h = s.y - goal.y + 30;
+    s.vy = -Math.min(Math.sqrt(2 * GRAVITY * h), 22);
+    s.ground = null;
+    s.spin = true;
+    s.goalX = goal.x;
+    s.jumpCooldown = 60;
+    return true;
+  }
+
+  // Roll-users dodge: if an enemy shot is about to hit, roll through it.
+  function maybeDodge(s) {
+    if (s.move !== 'roll' || !s.ground || s.roll > 0 || s.rollCooldown > 0) return;
+    var cy = s.y - SH * SCALE / 2;
+    for (var b = 0; b < bullets.length; b++) {
+      var u = bullets[b];
+      if (u.team === s.team) continue;
+      var rx = s.x - u.x, ry = cy - u.y;
+      var d = Math.hypot(rx, ry);
+      if (d > 130 || d < 1) continue;
+      if ((rx * u.vx + ry * u.vy) / (d * Math.hypot(u.vx, u.vy)) < 0.85) continue; // not heading at us
+      s.roll = ROLL_FRAMES;
+      s.rollDir = Math.random() < 0.5 ? -1 : 1;
+      s.rollCooldown = 70 + Math.random() * 40;
+      return;
+    }
+  }
+
+  function throwHook(s, t) {
+    var best = ledgeAbove(s, t);
     if (!best) return false;
 
     var hand = handPos(s);
@@ -478,21 +585,180 @@
     return 'fwd';
   }
 
-  function fire(s, angle) {
-    angle += (Math.random() - 0.5) * 2 * SPREAD;
+  // Decide whether to shoot this frame, based on the weapon.
+  function attack(s, dx, dy) {
+    var w = WEAPONS[s.weapon];
+    var dist = Math.hypot(dx, dy);
+    var angle = Math.atan2(dy, dx);
+    s.aim = aimPose(dx, dy);
+
+    if (s.weapon === 'machinegun') {
+      if (s.burst > 0) {
+        if (--s.burstT <= 0) { shoot(s, angle, 0.16, w.speed, w.range * 1.15); s.burst--; s.burstT = 5; }
+      } else if (s.cooldown <= 0 && dist < w.range) {
+        s.burst = 6; s.burstT = 0;
+        s.cooldown = 90 + Math.random() * 50;
+      }
+    } else if (s.weapon === 'flamethrower') {
+      if (dist < w.range && s.cooldown <= 0) {
+        flame(s, angle);
+        s.cooldown = 2;
+      }
+    } else if (s.weapon === 'launcher') {
+      if (s.cooldown <= 0 && dist < w.range) {
+        var lob = lobAngle(dx, dy, GRENADE_SPEED, GRENADE_GRAVITY);
+        if (lob !== null) {
+          s.aim = aimPose(Math.cos(lob), Math.sin(lob));
+          grenade(s, lob);
+          s.cooldown = 110 + Math.random() * 50;
+        }
+      }
+    } else if (s.cooldown <= 0 && dist < w.range) {
+      shoot(s, angle, SPREAD, w.speed, w.range * 1.15);
+      s.cooldown = 40 + Math.random() * 45;
+    }
+  }
+
+  // Low-arc launch angle that lands a projectile at (dx, dy), or null if out of reach.
+  function lobAngle(dx, dy, v, g) {
+    var x = Math.abs(dx), y = -dy; // y up
+    var v2 = v * v;
+    var root = v2 * v2 - g * (g * x * x + 2 * y * v2);
+    if (root < 0) return null;
+    var a = Math.atan2(v2 - Math.sqrt(root), g * x); // elevation above horizontal
+    return dx >= 0 ? -a : Math.PI + a;
+  }
+
+  // World position of the weapon's muzzle for the current aim pose.
+  function muzzle(s) {
+    var m = MUZZLE[s.aim || 'fwd'];
+    return { x: s.x + s.face * (m[0] - SW / 2) * SCALE, y: s.y - (SH - m[1]) * SCALE };
+  }
+
+  // Bullets fizzle out a little past the weapon's range.
+  function shoot(s, angle, spread, speed, reach) {
+    angle += (Math.random() - 0.5) * 2 * spread;
     s.shootPose = 12;
     var ox = s.x, oy = s.y - (SH - 7.5) * SCALE;
     bullets.push({
+      kind: 'bullet',
       team: s.team,
+      shooter: s,
       x: ox, y: oy,
-      ox: ox, oy: oy, // hidden until it clears the rifle
-      vx: Math.cos(angle) * BULLET_SPEED,
-      vy: Math.sin(angle) * BULLET_SPEED,
-      life: 100
+      ox: ox, oy: oy, // hidden until it clears the weapon
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: Math.ceil(reach / speed)
     });
   }
 
+  function flame(s, angle) {
+    angle += (Math.random() - 0.5) * 0.35;
+    var speed = 4 + Math.random() * 1.5;
+    var m = muzzle(s);
+    s.shootPose = 9;
+    bullets.push({
+      kind: 'flame',
+      team: s.team,
+      shooter: s,
+      x: m.x, y: m.y, ox: m.x, oy: m.y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 26 + Math.random() * 8,
+      age: 0
+    });
+  }
+
+  function grenade(s, angle) {
+    var m = muzzle(s);
+    s.shootPose = 12;
+    bullets.push({
+      kind: 'grenade',
+      team: s.team,
+      shooter: s,
+      x: m.x, y: m.y, ox: m.x, oy: m.y,
+      vx: Math.cos(angle) * GRENADE_SPEED,
+      vy: Math.sin(angle) * GRENADE_SPEED,
+      life: 240
+    });
+  }
+
+  function kill(o, shooter, fromX) {
+    o.dead = true;
+    o.jetting = false;
+    o.spin = false;
+    o.roll = 0;
+    if (shooter) {
+      var victimStreak = o.kills;
+      shooter.kills++;
+      announce(shooter, victimStreak);
+    }
+    o.hook = null;
+    o.ground = null;
+    o.dropFrom = null;
+    var dir = o.x >= fromX ? 1 : -1;
+    o.vy = -5;
+    o.vx = dir * 1.5;
+    o.fallDir = dir;
+  }
+
+  // The soldier (on another team) whose body contains (x, y), if any.
+  function hitSoldier(team, x, y, pad) {
+    for (var n = 0; n < soldiers.length; n++) {
+      var o = soldiers[n];
+      if (o.dead || o.team === team || o.roll > 0) continue;
+      if (Math.abs(x - o.x) < 4 * SCALE + pad && y > o.y - (SH - 1) * SCALE - pad && y < o.y + pad) return o;
+    }
+    return null;
+  }
+
+  function explode(g) {
+    for (var n = 0; n < soldiers.length; n++) {
+      var o = soldiers[n];
+      if (o.dead || o.team === g.team || o.roll > 0) continue;
+      if (Math.hypot(o.x - g.x, (o.y - SH * SCALE / 2) - g.y) < BLAST_RADIUS) kill(o, g.shooter, g.x);
+    }
+    for (var i = 0; i < 28; i++) {
+      var a = Math.random() * Math.PI * 2, sp = 1 + Math.random() * 4;
+      sparks.push({
+        x: g.x, y: g.y,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp - 1.5,
+        life: 18 + Math.random() * 20,
+        color: ['#fcfcfc', '#f8b800', '#e45c10', '#d82800'][Math.floor(Math.random() * 4)]
+      });
+    }
+    blasts.push({ x: g.x, y: g.y, t: 0 });
+  }
+
+  // Queue the banners a kill earns: first blood, shutdown, multi-kill, streak.
+  function announce(k, victimStreak) {
+    var color = TEAMS[k.team].T;
+    k.callouts = k.callouts || [];
+    function say(text) { k.callouts.push({ text: text, color: color, t: 0 }); }
+
+    if (!firstBlood) { firstBlood = true; say('FIRST BLOOD'); }
+    if (victimStreak >= 3) say('SHUTDOWN');
+
+    k.multi = tick - (k.lastKillT || -1e9) < MULTI_WINDOW ? (k.multi || 1) + 1 : 1;
+    k.lastKillT = tick;
+    if (k.multi >= 2) say(MULTIS[k.multi] || 'MULTI KILL');
+
+    if (STREAKS[k.kills]) say(STREAKS[k.kills]);
+    else if (k.kills > 65 && k.kills % 5 === 0) say(STREAK_BEYOND);
+
+    if (k.callouts.length > 3) k.callouts.splice(0, k.callouts.length - 3); // don't fall behind
+  }
+
   function step() {
+    tick++;
+    for (var ci = 0; ci < soldiers.length; ci++) {
+      var q = soldiers[ci].callouts;
+      if (!q || !q.length) continue;
+      // Hurry along when more are waiting.
+      if (++q[0].t > (q.length > 1 ? 60 : CALLOUT_FRAMES)) q.shift();
+    }
+
     // Keep both teams staffed.
     for (var team = 0; team < 2; team++) {
       var alive = soldiers.filter(function (s) { return s.team === team && !s.dead; }).length;
@@ -525,6 +791,11 @@
 
       think(s);
 
+      if (s.rollCooldown > 0) s.rollCooldown--;
+      maybeDodge(s);
+      if (s.roll > 0) { s.roll--; s.vx = s.rollDir * ROLL_SPEED; }
+      if (s.ground && s.fuel < JET_FUEL) s.fuel++;
+
       var prevY = s.y;
       s.x += s.vx;
       if (s.x < 12) { s.x = 12; s.wander = 1; }
@@ -535,9 +806,20 @@
       }
 
       if (!s.ground) {
-        s.vy = Math.min(s.vy + GRAVITY, MAX_FALL);
+        if (s.jetting) {
+          // Thrust until we're above the target ledge or out of fuel, then drop onto it.
+          if (s.fuel > 0 && s.y > s.jetGoalY - 24) {
+            s.fuel--;
+            s.vy = Math.max(s.vy + GRAVITY - JET_THRUST, -JET_MAX_RISE);
+            exhaust(s);
+          } else {
+            s.jetting = false;
+          }
+        }
+        if (!s.jetting) s.vy = Math.min(s.vy + GRAVITY, MAX_FALL);
         s.y += s.vy;
         if (s.vy > 0) land(s, prevY);
+        if (s.ground) { s.spin = false; s.jetting = false; }
       }
 
       if (s.y > docH + 200) soldiers.splice(i, 1);
@@ -546,25 +828,40 @@
 
     for (var b = bullets.length - 1; b >= 0; b--) {
       var u = bullets[b];
+      var prevUY = u.y;
+
+      if (u.kind === 'grenade') {
+        u.vy += GRENADE_GRAVITY;
+      } else if (u.kind === 'flame') {
+        u.vx *= 0.96; u.vy = u.vy * 0.96 - 0.05; // slows and rises
+        u.age++;
+      }
       u.x += u.vx;
       u.y += u.vy;
-      if (--u.life <= 0) { bullets.splice(b, 1); continue; }
-      for (var n = 0; n < soldiers.length; n++) {
-        var o = soldiers[n];
-        if (o.dead || o.team === u.team) continue;
-        if (Math.abs(u.x - o.x) < 4 * SCALE && u.y > o.y - (SH - 1) * SCALE && u.y < o.y) {
-          o.dead = true;
-          o.hook = null;
-          o.ground = null;
-          o.dropFrom = null;
-          o.vy = -5;
-          o.vx = u.vx > 0 ? 1.5 : -1.5;
-          o.fallDir = u.vx > 0 ? 1 : -1;
-          burst(u.x, u.y, TEAMS[o.team].T);
-          bullets.splice(b, 1);
-          break;
+
+      if (u.kind === 'grenade') {
+        var boom = --u.life <= 0 || hitSoldier(u.team, u.x, u.y, 2) || u.y > docH;
+        if (!boom && u.vy > 0) {
+          for (var k = 0; k < platforms.length; k++) {
+            var p = platforms[k];
+            if (u.x >= p.left && u.x <= p.right && prevUY <= p.top && u.y >= p.top) { u.y = p.top; boom = true; break; }
+          }
         }
+        if (boom) { explode(u); bullets.splice(b, 1); }
+        continue;
       }
+
+      if (--u.life <= 0) { bullets.splice(b, 1); continue; }
+      var o = hitSoldier(u.team, u.x, u.y, u.kind === 'flame' ? 3 : 0);
+      if (o) {
+        kill(o, u.shooter, u.x - u.vx * 4);
+        burst(u.x, u.y, TEAMS[o.team].T);
+        bullets.splice(b, 1);
+      }
+    }
+
+    for (var e = blasts.length - 1; e >= 0; e--) {
+      if (++blasts[e].t > 14) blasts.splice(e, 1);
     }
 
     for (var q = sparks.length - 1; q >= 0; q--) {
@@ -572,6 +869,18 @@
       sp.x += sp.vx; sp.y += sp.vy; sp.vy += 0.2;
       if (--sp.life <= 0) sparks.splice(q, 1);
     }
+  }
+
+  function exhaust(s) {
+    var bx = s.x - s.face * 5 * SCALE;
+    sparks.push({
+      x: bx + (Math.random() - 0.5) * SCALE,
+      y: s.y - 5 * SCALE,
+      vx: (Math.random() - 0.5) * 0.6,
+      vy: 2 + Math.random() * 1.5,
+      life: 8 + Math.random() * 6,
+      color: Math.random() < 0.5 ? '#f8b800' : '#e45c10'
+    });
   }
 
   function burst(x, y, color) {
@@ -613,14 +922,15 @@
 
       if (s.hook && !s.dead) drawHook(s, sx, sy);
 
-      var frames = SPRITES[s.team][s.aim || 'fwd'];
+      var frames = SPRITES[s.team][s.weapon][s.aim || 'fwd'];
       var pose;
-      if (s.dead || !s.ground || (s.hook && s.hook.phase === 'reel')) pose = 'jump';
+      if (s.dead || !s.ground || s.roll > 0 || (s.hook && s.hook.phase === 'reel')) pose = 'jump';
       else if (s.vx !== 0) pose = Math.floor(s.step / 8) % 2 ? 'walk1' : 'walk2';
       else pose = 'stand';
       var img = frames[pose][s.face > 0 ? 1 : 0];
 
       if (s.dead) {
+        if (s.callouts && s.callouts.length) drawCallout(s, px, py - (SW + 2) * SCALE, py, vw);
         if (s.deadT > CORPSE_TIME - 60 && s.deadT % 6 < 3) continue; // blink before vanishing
         // Topple over: rotate a quarter turn and lower the pivot so the body
         // ends up lying flat on the ledge.
@@ -634,22 +944,61 @@
         continue;
       }
 
-      ctx.drawImage(img, px - (SW / 2 + 1) * SCALE, py - (SH + 1) * SCALE);
+      if (s.move === 'jetpack') drawJetpack(s, px, py);
 
-      if (s.shootPose > 8) {
-        var m = MUZZLE[s.aim || 'fwd'];
-        var mx = px + s.face * (m[0] - SW / 2) * SCALE;
-        var my = py - (SH - m[1]) * SCALE;
+      var spinning = s.roll > 0 || (s.spin && !s.ground);
+      if (spinning) {
+        // Tucked somersault around the body's center.
+        var turn = s.roll > 0 ? (1 - s.roll / ROLL_FRAMES) * s.rollDir : (s.spinT = (s.spinT || 0) + 1) / 18 * s.face;
+        ctx.save();
+        ctx.translate(px, py - (SH / 2) * SCALE);
+        ctx.rotate(turn * Math.PI * 2);
+        ctx.drawImage(img, -(SW / 2 + 1) * SCALE, -(SH / 2 + 1) * SCALE);
+        ctx.restore();
+      } else {
+        ctx.drawImage(img, px - (SW / 2 + 1) * SCALE, py - (SH + 1) * SCALE);
+      }
+      drawNumber(s.kills, px, py - (SH + 2) * SCALE, TEAMS[s.team].T);
+      if (s.callouts && s.callouts.length) drawCallout(s, px, py - (SH + 2) * SCALE - 5 * DIGIT_PX - 4, py, vw);
+
+      if (s.shootPose > 8 && s.weapon !== 'flamethrower') {
+        var m = muzzle(s);
         ctx.fillStyle = '#fbbf24';
-        ctx.fillRect(Math.round(mx - SCALE), Math.round(my - SCALE), 2 * SCALE, 2 * SCALE);
+        ctx.fillRect(Math.round(m.x - sx - SCALE), Math.round(m.y - sy - SCALE), 2 * SCALE, 2 * SCALE);
       }
     }
 
     for (var b = 0; b < bullets.length; b++) {
       var u = bullets[b];
-      if (Math.hypot(u.x - u.ox, u.y - u.oy) < (SW / 2) * SCALE) continue;
-      ctx.fillStyle = '#d82800';
-      ctx.fillRect(Math.round(u.x - sx) - SCALE, Math.round(u.y - sy) - SCALE, 2 * SCALE, 2 * SCALE);
+      var bx = Math.round(u.x - sx), by = Math.round(u.y - sy);
+      if (u.kind === 'flame') {
+        // Grows and cools from white-hot to red as it ages.
+        var f = u.age / 30;
+        var size = Math.round(1.5 + f * 2.5) * SCALE;
+        ctx.fillStyle = f < 0.3 ? '#fcfcfc' : f < 0.55 ? '#f8b800' : f < 0.8 ? '#e45c10' : '#d82800';
+        ctx.fillRect(Math.round((bx - size / 2) / SCALE) * SCALE, Math.round((by - size / 2) / SCALE) * SCALE, size, size);
+      } else if (u.kind === 'grenade') {
+        ctx.fillStyle = '#007800';
+        ctx.fillRect(bx - SCALE, by - SCALE, 2 * SCALE, 2 * SCALE);
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(bx - SCALE, by - SCALE, SCALE, SCALE);
+      } else {
+        if (Math.hypot(u.x - u.ox, u.y - u.oy) < (SW / 2) * SCALE) continue;
+        ctx.fillStyle = '#d82800';
+        ctx.fillRect(bx - SCALE, by - SCALE, 2 * SCALE, 2 * SCALE);
+      }
+    }
+
+    // Grenade blasts: a chunky ring that expands and cools.
+    for (var e = 0; e < blasts.length; e++) {
+      var bl = blasts[e];
+      var r = 8 + bl.t * 3.5;
+      var cx = Math.round(bl.x - sx), cy = Math.round(bl.y - sy);
+      ctx.fillStyle = bl.t < 5 ? '#fcfcfc' : bl.t < 10 ? '#f8b800' : '#e45c10';
+      for (var a = 0; a < 16; a++) {
+        var ang = a / 16 * Math.PI * 2;
+        ctx.fillRect(Math.round((cx + Math.cos(ang) * r) / SCALE) * SCALE, Math.round((cy + Math.sin(ang) * r) / SCALE) * SCALE, 2 * SCALE, 2 * SCALE);
+      }
     }
 
     for (var q = 0; q < sparks.length; q++) {
@@ -659,9 +1008,104 @@
       ctx.fillRect(Math.round(sp.x - sx), Math.round(sp.y - sy), 3, 3);
     }
     ctx.globalAlpha = 1;
+
   }
 
   // Chunky NES-style rope: a dotted line of square pixels, plus a little claw.
+  // A small gray tank on the soldier's back (behind the shoulders).
+  function drawJetpack(s, px, py) {
+    var left = s.face > 0 ? px - (SW / 2) * SCALE : px + (SW / 2 - 2) * SCALE;
+    var top = py - (SH - 6) * SCALE;
+    ctx.fillStyle = '#7c7c7c';
+    ctx.fillRect(left, top, 2 * SCALE, 5 * SCALE);
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(left, top + 5 * SCALE, 2 * SCALE, SCALE); // nozzle
+  }
+
+  // ---------- kill-streak banners ----------
+  var CALLOUT_FRAMES = 110;
+  // 5x5 pixel font (rows top to bottom).
+  var FONT = {
+    A: '.###.#...#######...##...#', B: '####.#...#####.#...#####.', C: '.#####....#....#.....####',
+    D: '####.#...##...##...#####.', E: '######....####.#....#####', F: '######....####.#....#....',
+    G: '.#####....#..###...#.####', H: '#...##...#######...##...#', I: '#####..#....#....#..#####',
+    J: '..###...#....#.#..#..##..', K: '#...##..#.###..#..#.#...#', L: '#....#....#....#....#####',
+    M: '#...###.###.#.##...##...#', N: '#...###..##.#.##..###...#', O: '.###.#...##...##...#.###.',
+    P: '####.#...#####.#....#....', Q: '.###.#...##.#.##..#..##.#', R: '####.#...#####.#..#.#...#',
+    S: '.#####.....###.....#####.', T: '#####..#....#....#....#..', U: '#...##...##...##...#.###.',
+    V: '#...##...##...#.#.#...#..', W: '#...##...##.#.###.###...#', X: '#...#.#.#...#...#.#.#...#',
+    Y: '#...#.#.#...#....#....#..', Z: '#####...#...#...#...#####', '!': '..#....#....#.........#..',
+    ' ': '.........................'
+  };
+
+  function textWidth(str, px) { return str.length * 6 * px - px; }
+
+  function drawText(str, x, y, px, color) {
+    ctx.fillStyle = color;
+    for (var i = 0; i < str.length; i++) {
+      var g = FONT[str[i]] || FONT[' '];
+      for (var k = 0; k < 25; k++) {
+        if (g[k] === '#') ctx.fillRect(x + (i * 6 + k % 5) * px, y + Math.floor(k / 5) * px, px, px);
+      }
+    }
+  }
+
+  // Speech-bubble style callout floating over the soldier who earned it.
+  // (cx, bottom) is the point it sits on: just above the kill counter. If
+  // that's off the top of the screen it hangs below the feet (feetY) instead.
+  function drawCallout(k, cx, bottom, feetY, vw) {
+    var c = k.callouts[0];
+    var hold = k.callouts.length > 1 ? 60 : CALLOUT_FRAMES;
+    var px = c.t < 4 ? 4 : c.t < 8 ? 3 : 2;           // pop: starts big, settles
+    var w = textWidth(c.text, px), h = 5 * px;
+    var pad = 3;
+    var rise = Math.min(c.t, 10);                      // drifts up a little as it appears
+    var x = Math.round(Math.max(pad + 2, Math.min(vw - w - pad - 2, cx - w / 2)));
+    var y = Math.round(bottom - 6 - h - pad - rise);
+    var below = y - pad < 2;
+    if (below) y = Math.round(feetY + 8 + pad + rise);
+
+    ctx.globalAlpha = c.t > hold - 15 ? Math.max(0, (hold - c.t) / 15) : 1;
+    // Bubble with a little tail pointing down at the soldier.
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(x - pad - 1, y - pad - 1, w + pad * 2 + 2, h + pad * 2 + 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(x - pad, y - pad, w + pad * 2, h + pad * 2);
+    var tx = Math.round(Math.max(x, Math.min(x + w - 4, cx - 2)));
+    var edge = below ? y - pad - 3 : y + h + pad;      // tail points at the soldier
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(tx - 1, edge, 6, 3);
+    ctx.fillRect(tx + 1, below ? edge - 2 : edge + 3, 2, 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(tx, below ? edge + 1 : edge, 4, 2);
+
+    drawText(c.text, x, y, px, c.t % 8 < 4 && c.t < 24 ? '#f8b800' : c.color); // flash then team color
+    ctx.globalAlpha = 1;
+  }
+
+  // Tiny 3x5 pixel digits for the kill counters.
+  var DIGITS = [
+    '111101101101111', '010110010010111', '111001111100111', '111001111001111', '101101111001001',
+    '111100111001111', '111100111101111', '111001001001001', '111101111101111', '111101111001111'
+  ];
+  var DIGIT_PX = 2; // CSS px per digit pixel
+
+  // Draws n centered on cx with its bottom edge at by.
+  function drawNumber(n, cx, by, color) {
+    var str = String(n);
+    var w = str.length * 4 * DIGIT_PX - DIGIT_PX;
+    var x0 = Math.round(cx - w / 2), y0 = Math.round(by - 5 * DIGIT_PX);
+    ctx.fillStyle = color;
+    for (var i = 0; i < str.length; i++) {
+      var bits = DIGITS[+str[i]];
+      for (var k = 0; k < 15; k++) {
+        if (bits[k] === '1') {
+          ctx.fillRect(x0 + (i * 4 + k % 3) * DIGIT_PX, y0 + Math.floor(k / 3) * DIGIT_PX, DIGIT_PX, DIGIT_PX);
+        }
+      }
+    }
+  }
+
   function drawHook(s, sx, sy) {
     var hand = handPos(s);
     var x0 = hand.x - sx, y0 = hand.y - sy;
@@ -713,7 +1157,7 @@
     if (frame) cancelAnimationFrame(frame);
     clearInterval(measureTimer);
     frame = null;
-    soldiers.length = bullets.length = sparks.length = 0;
+    soldiers.length = bullets.length = sparks.length = blasts.length = 0;
     respawnAt = [0, 0];
     if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
   }
