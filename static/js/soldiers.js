@@ -5,7 +5,7 @@
 
   var STORAGE_KEY = 'soldiers-enabled';
   var SW = 12, SH = 16;        // sprite size in art pixels
-  var SCALE = 3;               // 12x16 sprite -> 36x48 CSS px (about half an inch)
+  var SCALE = 1.5;             // 12x16 sprite -> 18x24 CSS px (about a quarter inch)
   var GRAVITY = 0.45;
   var JUMP_VY = -9.6;          // ~100px jump
   var WALK_SPEED = 1.3;
@@ -24,7 +24,7 @@
   var WEAPON_NAMES = Object.keys(WEAPONS);
   var GRENADE_SPEED = 9;
   var GRENADE_GRAVITY = 0.25;
-  var BLAST_RADIUS = 56;
+  var BLAST_RADIUS = 40;
 
   // Each soldier also spawns with one movement item at random.
   //   grapple: hook a ledge above and reel up
@@ -153,8 +153,8 @@
       }
     }
     var c = document.createElement('canvas');
-    c.width = W * SCALE;
-    c.height = H * SCALE;
+    c.width = Math.ceil(W * SCALE);
+    c.height = Math.ceil(H * SCALE);
     var g = c.getContext('2d');
     for (y = 0; y < H; y++) {
       for (x = 0; x < W; x++) {
@@ -168,7 +168,8 @@
         }
         if (!color) continue;
         g.fillStyle = color;
-        g.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
+        var x0 = Math.floor(x * SCALE), y0 = Math.floor(y * SCALE);
+        g.fillRect(x0, y0, Math.floor((x + 1) * SCALE) - x0, Math.floor((y + 1) * SCALE) - y0);
       }
     }
     return c;
@@ -273,6 +274,24 @@
     65: 'ASCENDED TO HTML'
   };
   var STREAK_BEYOND = 'SEEK HELP'; // every 5 kills after the last one
+
+  // Killstreak rewards: each streak callout also calls in perks.
+  //   armor:     absorbs the next hit, for 10 seconds
+  //   sentry:    auto-turret dropped on the soldier's ledge
+  //   airstrike: a jet crosses the screen carpet-bombing the enemy
+  //   drone:     hovers over its owner and shoots at enemies
+  //   orbital:   targeting laser, then a beam from the sky
+  var PERK_LADDER = {
+    3: ['armor'], 5: ['sentry'], 7: ['airstrike'], 10: ['drone'], 15: ['orbital'],
+    20: ['drone', 'drone'], 25: ['airstrike', 'airstrike'], 30: ['sentry', 'sentry', 'armor'],
+    35: ['orbital', 'orbital', 'orbital'], 40: ['drone', 'drone', 'drone'],
+    45: ['airstrike', 'airstrike', 'airstrike'], 50: ['orbital', 'orbital', 'orbital', 'orbital', 'orbital'],
+    55: ['sentry', 'sentry', 'sentry', 'armor'], 60: ['armor', 'sentry', 'airstrike', 'drone', 'orbital'],
+    65: ['armor', 'sentry', 'sentry', 'airstrike', 'airstrike', 'drone', 'drone', 'orbital', 'orbital']
+  };
+  var PERK_BEYOND = ['armor', 'sentry', 'airstrike', 'drone', 'orbital'];
+  var SENTRY_LIFE = 900, DRONE_LIFE = 1200;  // frames (15s, 20s)
+  var ARMOR_LIFE = 600;                      // frames (10s); armor wears off after this
   var MULTIS = { 2: 'DOUBLE KILL', 3: 'TRIPLE KILL' };
   var respawnAt = [0, 0];
 
@@ -366,7 +385,7 @@
     // whatever we're doing with our legs.
     var aimDX = t.x - s.x;
     var aimDY = (t.y - SH * SCALE * 0.55) - (s.y - (SH - 7.5) * SCALE);
-    attack(s, aimDX, aimDY);
+    var canHit = attack(s, aimDX, aimDY);
 
     var w = WEAPONS[s.weapon];
     if (Math.abs(dy) < 20 && Math.abs(dx) < SIGHT) {
@@ -379,14 +398,64 @@
       return;
     }
 
+    // Enemy is on another level but within this weapon's reach: hold this
+    // ledge and fight instead of chasing (which made both soldiers swap
+    // levels forever). Strafe a little so it doesn't look frozen.
+    if (canHit) {
+      if (--s.strafeT <= 0) {
+        s.strafeDir = Math.random() < 0.35 ? 0 : Math.random() < 0.5 ? -1 : 1;
+        s.strafeT = 40 + Math.random() * 60;
+      }
+      s.vx = (s.strafeDir || 0) * WALK_SPEED * 0.6;
+      if (s.ground && !platformUnder(s.x + s.vx * 10, s.y)) { s.strafeDir = -(s.strafeDir || 0); s.vx = 0; } // stay on the ledge
+      if (s.ground && s.jumpCooldown <= 0 && Math.random() < 0.006) jump(s);
+      return;
+    }
+
     s.vx = s.face * WALK_SPEED;
 
     if (dy < -20) {
       climb(s, t);
-    } else if (dy > 20 && s.ground && !s.ground.floor && Math.random() < 0.01) {
-      s.dropFrom = s.ground; // Target is below: drop through.
+    } else if (dy > 20) {
+      descend(s, t);
+    }
+  }
+
+  // Target is below: pick a lower ledge close to the enemy's height, walk
+  // until we're over it, then drop through our ledge onto it.
+  function descend(s, t) {
+    if (!s.ground) {
+      if (s.goalX != null) {
+        s.face = s.goalX < s.x ? -1 : 1;
+        s.vx = Math.abs(s.goalX - s.x) > 2 ? s.face * WALK_SPEED : 0;
+      }
+      return;
+    }
+    s.goalX = null;
+    if (s.ground.floor) return; // nowhere lower to go
+
+    var best = null, bestCost = Infinity;
+    for (var i = 0; i < platforms.length; i++) {
+      var p = platforms[i];
+      if (p === s.ground || p.top <= s.y + 10 || p.top > t.y + 20) continue; // below us, not past the enemy
+      if (p.right - p.left < 30) continue;
+      var nx = Math.max(p.left + 12, Math.min(p.right - 12, s.x));
+      var cost = Math.abs(nx - s.x) + Math.abs(p.top - t.y) * 0.8 + Math.abs(nx - t.x) * 0.2;
+      if (cost < bestCost) { bestCost = cost; best = p; }
+    }
+    if (!best) return; // keep walking toward the enemy
+
+    var over = s.x > best.left + 12 && s.x < best.right - 12;
+    if (over && s.jumpCooldown <= 0) {
+      s.dropFrom = s.ground;
       s.ground = null;
       s.vy = 1;
+      s.jumpCooldown = 30;
+      s.goalX = Math.max(best.left + 12, Math.min(best.right - 12, t.x));
+    } else if (!over) {
+      var aimX = Math.max(best.left + 12, Math.min(best.right - 12, s.x));
+      s.face = aimX < s.x ? -1 : 1;
+      s.vx = s.face * WALK_SPEED;
     }
   }
 
@@ -592,6 +661,9 @@
     var angle = Math.atan2(dy, dx);
     s.aim = aimPose(dx, dy);
 
+    var inReach = dist < w.range * 0.85;
+    if (s.weapon === 'launcher') inReach = inReach && lobAngle(dx, dy, GRENADE_SPEED, GRENADE_GRAVITY) !== null;
+
     if (s.weapon === 'machinegun') {
       if (s.burst > 0) {
         if (--s.burstT <= 0) { shoot(s, angle, 0.16, w.speed, w.range * 1.15); s.burst--; s.burstT = 5; }
@@ -617,6 +689,7 @@
       shoot(s, angle, SPREAD, w.speed, w.range * 1.15);
       s.cooldown = 40 + Math.random() * 45;
     }
+    return inReach;
   }
 
   // Low-arc launch angle that lands a projectile at (dx, dy), or null if out of reach.
@@ -684,6 +757,12 @@
   }
 
   function kill(o, shooter, fromX) {
+    if (o.armor > 0 && tick < o.armorUntil) {
+      o.armor--;
+      o.armorFlash = 20;
+      burst(o.x, o.y - SH * SCALE / 2, '#bcbcbc');
+      return;
+    }
     o.dead = true;
     o.jetting = false;
     o.spin = false;
@@ -735,7 +814,10 @@
   function announce(k, victimStreak) {
     var color = TEAMS[k.team].T;
     k.callouts = k.callouts || [];
-    function say(text) { k.callouts.push({ text: text, color: color, t: 0 }); }
+    var fresh = 0;
+    function say(text) {
+      k.callouts.push({ text: text, color: color, t: 0, delay: fresh++ * 8 });
+    }
 
     if (!firstBlood) { firstBlood = true; say('FIRST BLOOD'); }
     if (victimStreak >= 3) say('SHUTDOWN');
@@ -747,16 +829,140 @@
     if (STREAKS[k.kills]) say(STREAKS[k.kills]);
     else if (k.kills > 65 && k.kills % 5 === 0) say(STREAK_BEYOND);
 
-    if (k.callouts.length > 3) k.callouts.splice(0, k.callouts.length - 3); // don't fall behind
+    var reward = PERK_LADDER[k.kills] || (k.kills > 65 && k.kills % 5 === 0 ? PERK_BEYOND : null);
+    if (reward) {
+      reward.forEach(function (kind, i) { activatePerk(k, kind, i); });
+    }
+
+    if (k.callouts.length > MAX_CALLOUTS) k.callouts.splice(0, k.callouts.length - MAX_CALLOUTS); // oldest go first
+  }
+
+  // ---------- killstreak perks ----------
+  var perks = [];
+
+  function enemyOf(team, nearX, nearY) {
+    var best = null, bestD = Infinity;
+    for (var i = 0; i < soldiers.length; i++) {
+      var o = soldiers[i];
+      if (o.dead || o.team === team) continue;
+      var d = Math.hypot(o.x - nearX, o.y - nearY);
+      if (d < bestD) { bestD = d; best = o; }
+    }
+    return best;
+  }
+
+  function perkShot(owner, x, y, tx, ty, speed, spread) {
+    var a = Math.atan2(ty - y, tx - x) + (Math.random() - 0.5) * 2 * spread;
+    bullets.push({
+      kind: 'bullet', team: owner.team, shooter: owner,
+      x: x, y: y, ox: x, oy: y,
+      vx: Math.cos(a) * speed, vy: Math.sin(a) * speed,
+      life: Math.ceil(450 / speed)
+    });
+  }
+
+  function activatePerk(k, kind, index) {
+    var team = k.team;
+    if (kind === 'armor') {
+      k.armor = (k.armor || 0) + 1;
+      k.armorUntil = tick + ARMOR_LIFE; // a new grant refreshes the timer
+    } else if (kind === 'sentry') {
+      var ledge = k.ground || platformUnder(k.x, k.y);
+      perks.push({
+        kind: 'sentry', team: team, owner: k,
+        x: k.x + (index % 2 ? 1 : -1) * (20 + index * 16), y: ledge ? ledge.top : k.y,
+        face: k.face, life: SENTRY_LIFE, cool: 30
+      });
+    } else if (kind === 'drone') {
+      perks.push({
+        kind: 'drone', team: team, owner: k,
+        x: k.x, y: k.y - 60, slot: index, life: DRONE_LIFE, cool: 40 + index * 12
+      });
+    } else if (kind === 'airstrike') {
+      var fromLeft = (index + team) % 2 === 0;
+      var vw = window.innerWidth;
+      perks.push({
+        kind: 'plane', team: team, owner: k,
+        x: window.scrollX + (fromLeft ? -60 - index * 140 : vw + 60 + index * 140),
+        y: window.scrollY + 26 + index * 14,
+        vx: fromLeft ? 6 : -6, drop: 0, life: 400
+      });
+    } else if (kind === 'orbital') {
+      perks.push({
+        kind: 'orbital', team: team, owner: k,
+        x: k.x, t: -index * 45, life: 150 // staggered when several are called in
+      });
+    }
+  }
+
+  function updatePerks() {
+    for (var i = perks.length - 1; i >= 0; i--) {
+      var p = perks[i];
+      p.life--;
+
+      if (p.kind === 'sentry') {
+        var e = enemyOf(p.team, p.x, p.y);
+        var gy = p.y - 4;
+        if (e) p.face = e.x < p.x ? -1 : 1;
+        if (e && --p.cool <= 0 && Math.hypot(e.x - p.x, e.y - p.y) < 380) {
+          perkShot(p.owner, p.x + p.face * 4, gy, e.x, e.y - SH * SCALE * 0.55, 9, 0.08);
+          p.cool = 26;
+        }
+      } else if (p.kind === 'drone') {
+        // Hover over the owner (or where they fell), bobbing, and shoot.
+        var o = p.owner;
+        var hx = o.x + (p.slot - 1) * 34, hy = o.y - SH * SCALE - 34 - (p.slot % 2) * 12;
+        hy = Math.max(hy, window.scrollY + 14 + (p.slot % 2) * 12); // stay on screen
+        p.x += (hx - p.x) * 0.06;
+        p.y += (hy + Math.sin((tick + p.slot * 20) / 12) * 4 - p.y) * 0.06;
+        var t = enemyOf(p.team, p.x, p.y);
+        if (t && --p.cool <= 0 && Math.hypot(t.x - p.x, t.y - p.y) < 420) {
+          perkShot(p.owner, p.x, p.y + 3, t.x, t.y - SH * SCALE * 0.55, 8, 0.1);
+          p.cool = 45;
+        }
+      } else if (p.kind === 'plane') {
+        p.x += p.vx;
+        var target = enemyOf(p.team, p.x, p.y);
+        var aimX = target ? target.x : p.owner.x + p.vx * 30;
+        if (Math.abs(p.x - aimX) < 170 && ++p.drop % 7 === 0) {
+          bullets.push({
+            kind: 'grenade', bomb: true, team: p.team, shooter: p.owner,
+            x: p.x, y: p.y + 8, ox: p.x, oy: p.y,
+            vx: p.vx * 0.25, vy: 1.5, life: 400
+          });
+        }
+      } else if (p.kind === 'orbital') {
+        p.t++;
+        if (p.t < 0) { p.life++; continue; }       // waiting its turn
+        var tgt = enemyOf(p.team, p.x, 0);
+        if (p.t < 70 && tgt) p.x += (tgt.x - p.x) * 0.12; // lock on
+        if (p.t >= 80 && p.t < 110) {
+          for (var n = 0; n < soldiers.length; n++) {
+            var v = soldiers[n];
+            if (!v.dead && v.team !== p.team && Math.abs(v.x - p.x) < 7 * SCALE) kill(v, p.owner, p.x);
+          }
+          if (p.t % 3 === 0) {
+            var gyb = (tgt && Math.abs(tgt.x - p.x) < 40) ? tgt.y : window.scrollY + window.innerHeight - 10;
+            sparks.push({ x: p.x + (Math.random() - 0.5) * 30, y: gyb, vx: (Math.random() - 0.5) * 5, vy: -Math.random() * 4,
+                          life: 15 + Math.random() * 10, color: Math.random() < 0.5 ? '#fcfcfc' : TEAMS[p.team].T });
+          }
+        }
+        if (p.t >= 115) p.life = 0;
+      }
+
+      if (p.life <= 0) perks.splice(i, 1);
+    }
   }
 
   function step() {
     tick++;
     for (var ci = 0; ci < soldiers.length; ci++) {
       var q = soldiers[ci].callouts;
-      if (!q || !q.length) continue;
-      // Hurry along when more are waiting.
-      if (++q[0].t > (q.length > 1 ? 60 : CALLOUT_FRAMES)) q.shift();
+      if (!q) continue;
+      for (var qi = q.length - 1; qi >= 0; qi--) {
+        if (q[qi].delay > 0) { q[qi].delay--; continue; }
+        if (++q[qi].t > CALLOUT_FRAMES) q.splice(qi, 1);
+      }
     }
 
     // Keep both teams staffed.
@@ -787,6 +993,7 @@
         continue;
       }
 
+      if (s.armor > 0 && tick >= s.armorUntil) s.armor = 0; // armor wore off
       if (updateHook(s)) continue;
 
       think(s);
@@ -864,6 +1071,8 @@
       if (++blasts[e].t > 14) blasts.splice(e, 1);
     }
 
+    updatePerks();
+
     for (var q = sparks.length - 1; q >= 0; q--) {
       var sp = sparks[q];
       sp.x += sp.vx; sp.y += sp.vy; sp.vy += 0.2;
@@ -930,7 +1139,7 @@
       var img = frames[pose][s.face > 0 ? 1 : 0];
 
       if (s.dead) {
-        if (s.callouts && s.callouts.length) drawCallout(s, px, py - (SW + 2) * SCALE, py, vw);
+        if (s.callouts && s.callouts.length) drawCallouts(s, px, py, vw);
         if (s.deadT > CORPSE_TIME - 60 && s.deadT % 6 < 3) continue; // blink before vanishing
         // Topple over: rotate a quarter turn and lower the pivot so the body
         // ends up lying flat on the ledge.
@@ -939,7 +1148,7 @@
         ctx.save();
         ctx.translate(px, py - pivotUp * SCALE);
         ctx.rotate(s.fallDir * tip * Math.PI / 2);
-        ctx.drawImage(img, -(SW / 2 + 1) * SCALE, -(SH / 2 + 1) * SCALE);
+        ctx.drawImage(img, Math.round(-(SW / 2 + 1) * SCALE), Math.round(-(SH / 2 + 1) * SCALE));
         ctx.restore();
         continue;
       }
@@ -953,13 +1162,14 @@
         ctx.save();
         ctx.translate(px, py - (SH / 2) * SCALE);
         ctx.rotate(turn * Math.PI * 2);
-        ctx.drawImage(img, -(SW / 2 + 1) * SCALE, -(SH / 2 + 1) * SCALE);
+        ctx.drawImage(img, Math.round(-(SW / 2 + 1) * SCALE), Math.round(-(SH / 2 + 1) * SCALE));
         ctx.restore();
       } else {
-        ctx.drawImage(img, px - (SW / 2 + 1) * SCALE, py - (SH + 1) * SCALE);
+        ctx.drawImage(img, Math.round(px - (SW / 2 + 1) * SCALE), Math.round(py - (SH + 1) * SCALE));
       }
       drawNumber(s.kills, px, py - (SH + 2) * SCALE, TEAMS[s.team].T);
-      if (s.callouts && s.callouts.length) drawCallout(s, px, py - (SH + 2) * SCALE - 5 * DIGIT_PX - 4, py, vw);
+      if (s.armor > 0 || s.armorFlash > 0) drawArmor(s, px, py);
+      if (s.callouts && s.callouts.length) drawCallouts(s, px, py, vw);
 
       if (s.shootPose > 8 && s.weapon !== 'flamethrower') {
         var m = muzzle(s);
@@ -967,6 +1177,8 @@
         ctx.fillRect(Math.round(m.x - sx - SCALE), Math.round(m.y - sy - SCALE), 2 * SCALE, 2 * SCALE);
       }
     }
+
+    drawPerks(sx, sy, vw, vh);
 
     for (var b = 0; b < bullets.length; b++) {
       var u = bullets[b];
@@ -977,6 +1189,10 @@
         var size = Math.round(1.5 + f * 2.5) * SCALE;
         ctx.fillStyle = f < 0.3 ? '#fcfcfc' : f < 0.55 ? '#f8b800' : f < 0.8 ? '#e45c10' : '#d82800';
         ctx.fillRect(Math.round((bx - size / 2) / SCALE) * SCALE, Math.round((by - size / 2) / SCALE) * SCALE, size, size);
+      } else if (u.bomb) {
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(bx - SCALE, by - 2 * SCALE, 2 * SCALE, 3 * SCALE);
+        ctx.fillRect(bx - 2 * SCALE, by - 3 * SCALE, 4 * SCALE, SCALE); // fins
       } else if (u.kind === 'grenade') {
         ctx.fillStyle = '#007800';
         ctx.fillRect(bx - SCALE, by - SCALE, 2 * SCALE, 2 * SCALE);
@@ -1023,7 +1239,8 @@
   }
 
   // ---------- kill-streak banners ----------
-  var CALLOUT_FRAMES = 110;
+  var CALLOUT_FRAMES = 120;
+  var MAX_CALLOUTS = 6;
   // 5x5 pixel font (rows top to bottom).
   var FONT = {
     A: '.###.#...#######...##...#', B: '####.#...#####.#...#####.', C: '.#####....#....#.....####',
@@ -1050,37 +1267,96 @@
     }
   }
 
-  // Speech-bubble style callout floating over the soldier who earned it.
-  // (cx, bottom) is the point it sits on: just above the kill counter. If
-  // that's off the top of the screen it hangs below the feet (feetY) instead.
-  function drawCallout(k, cx, bottom, feetY, vw) {
-    var c = k.callouts[0];
-    var hold = k.callouts.length > 1 ? 60 : CALLOUT_FRAMES;
-    var px = c.t < 4 ? 4 : c.t < 8 ? 3 : 2;           // pop: starts big, settles
-    var w = textWidth(c.text, px), h = 5 * px;
-    var pad = 3;
-    var rise = Math.min(c.t, 10);                      // drifts up a little as it appears
-    var x = Math.round(Math.max(pad + 2, Math.min(vw - w - pad - 2, cx - w / 2)));
-    var y = Math.round(bottom - 6 - h - pad - rise);
-    var below = y - pad < 2;
-    if (below) y = Math.round(feetY + 8 + pad + rise);
+  // A soldier's active streak callouts: small plain text in the team color,
+  // stacked under the feet with the newest closest.
+  function drawCallouts(k, cx, feetY, vw) {
+    var sy = feetY + 4;
+    for (var i = k.callouts.length - 1; i >= 0; i--) {
+      var c = k.callouts[i];
+      if (c.delay > 0) continue;
+      drawStreakText(c, cx, sy, vw);
+      sy += 5 * STREAK_PX + 3;
+    }
+  }
 
-    ctx.globalAlpha = c.t > hold - 15 ? Math.max(0, (hold - c.t) / 15) : 1;
-    // Bubble with a little tail pointing down at the soldier.
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(x - pad - 1, y - pad - 1, w + pad * 2 + 2, h + pad * 2 + 2);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(x - pad, y - pad, w + pad * 2, h + pad * 2);
-    var tx = Math.round(Math.max(x, Math.min(x + w - 4, cx - 2)));
-    var edge = below ? y - pad - 3 : y + h + pad;      // tail points at the soldier
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(tx - 1, edge, 6, 3);
-    ctx.fillRect(tx + 1, below ? edge - 2 : edge + 3, 2, 2);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(tx, below ? edge + 1 : edge, 4, 2);
+  var STREAK_PX = 1; // 5px-tall letters
 
-    drawText(c.text, x, y, px, c.t % 8 < 4 && c.t < 24 ? '#f8b800' : c.color); // flash then team color
+  function drawStreakText(c, cx, top, vw) {
+    var w = textWidth(c.text, STREAK_PX);
+    var x = Math.round(Math.max(4, Math.min(vw - w - 4, cx - w / 2)));
+    ctx.globalAlpha = c.t > CALLOUT_FRAMES - 15 ? Math.max(0, (CALLOUT_FRAMES - c.t) / 15) : 1;
+    drawText(c.text, x, Math.round(top), STREAK_PX, c.t % 8 < 4 && c.t < 24 ? '#f8b800' : c.color); // flash then team color
     ctx.globalAlpha = 1;
+  }
+
+
+
+  // ---------- perk art (original, NES-style) ----------
+  var PERK_ART = {
+    sentry: ['..TTT..', '.TTTKKK', '..TTT..', '..K.K..', '.K...K.'],
+    drone:  ['KKK.KKK', '...K...', '.GGGGG.', '..GRG..'],
+    plane:  ['.......G....', 'GG....GGGG..', 'GGGGGGGGGGGG', '.TT...GG....']
+  };
+
+  function drawArt(rows, x, y, unit, flip, colors) {
+    for (var r = 0; r < rows.length; r++) {
+      var w = rows[r].length;
+      for (var c = 0; c < w; c++) {
+        var ch = rows[r][flip ? w - 1 - c : c];
+        if (ch === '.') continue;
+        ctx.fillStyle = colors[ch];
+        ctx.fillRect(x + c * unit, y + r * unit, unit, unit);
+      }
+    }
+  }
+
+  function drawPerks(sx, sy, vw, vh) {
+    for (var i = 0; i < perks.length; i++) {
+      var p = perks[i];
+      var team = TEAMS[p.team].T;
+      var colors = { T: team, K: '#000000', G: '#7c7c7c', R: (tick >> 3) % 2 ? '#d82800' : '#fcfcfc' };
+      var blink = p.life < 90 && (tick >> 2) % 2; // about to expire
+      if (p.kind === 'sentry' && !blink) {
+        drawArt(PERK_ART.sentry, Math.round(p.x - sx) - 4, Math.round(p.y - sy) - 5, 1, p.face < 0, colors);
+      } else if (p.kind === 'drone' && !blink) {
+        var art = PERK_ART.drone.slice();
+        if ((tick >> 1) % 2) art[0] = '.KK.KK.'; // spinning rotors
+        drawArt(art, Math.round(p.x - sx) - 7, Math.round(p.y - sy) - 4, 2, false, colors);
+      } else if (p.kind === 'plane') {
+        drawArt(PERK_ART.plane, Math.round(p.x - sx) - 12, Math.round(p.y - sy) - 4, 2, p.vx < 0, colors);
+      } else if (p.kind === 'orbital' && p.t >= 0) {
+        var bx = Math.round(p.x - sx);
+        if (p.t < 80) {
+          // Targeting laser: a blinking dashed line that locks on.
+          if ((p.t >> 2) % 2 || p.t > 60) {
+            ctx.fillStyle = team;
+            for (var y = 0; y < vh; y += 12) ctx.fillRect(bx - 1, y, 3, 6);
+          }
+        } else if (p.t < 110) {
+          var wdt = (p.t < 84 ? 4 : 7) * SCALE * 2;
+          ctx.fillStyle = team;
+          ctx.fillRect(bx - wdt / 2 - SCALE, 0, wdt + 2 * SCALE, vh);
+          ctx.fillStyle = '#fcfcfc';
+          ctx.fillRect(bx - wdt / 2 + SCALE, 0, wdt - 2 * SCALE, vh);
+        }
+      }
+    }
+  }
+
+  // Armor: NES-style corner brackets around the soldier; flashes when it breaks.
+  function drawArmor(s, px, py) {
+    if (s.armorFlash > 0) s.armorFlash--;
+    var color = s.armorFlash > 0 ? ((s.armorFlash >> 1) % 2 ? '#fcfcfc' : '#bcbcbc') : '#7c7c7c';
+    if (!s.armor && s.armorFlash <= 0) return;
+    if (!s.armorFlash && s.armorUntil - tick < 120 && (tick >> 2) % 2) return; // about to wear off
+    var l = px - (SW / 2 + 1) * SCALE, r = px + (SW / 2 + 1) * SCALE;
+    var t = py - (SH + 1) * SCALE, b = py;
+    var a = 3 * SCALE, th = 2;
+    ctx.fillStyle = color;
+    [[l, t, 1, 1], [r, t, -1, 1], [l, b, 1, -1], [r, b, -1, -1]].forEach(function (c) {
+      ctx.fillRect(c[2] > 0 ? c[0] : c[0] - a, c[3] > 0 ? c[1] : c[1] - th, a, th);
+      ctx.fillRect(c[2] > 0 ? c[0] : c[0] - th, c[3] > 0 ? c[1] : c[1] - a, th, a);
+    });
   }
 
   // Tiny 3x5 pixel digits for the kill counters.
@@ -1088,7 +1364,7 @@
     '111101101101111', '010110010010111', '111001111100111', '111001111001111', '101101111001001',
     '111100111001111', '111100111101111', '111001001001001', '111101111101111', '111101111001111'
   ];
-  var DIGIT_PX = 2; // CSS px per digit pixel
+  var DIGIT_PX = 1; // CSS px per digit pixel
 
   // Draws n centered on cx with its bottom edge at by.
   function drawNumber(n, cx, by, color) {
@@ -1157,7 +1433,7 @@
     if (frame) cancelAnimationFrame(frame);
     clearInterval(measureTimer);
     frame = null;
-    soldiers.length = bullets.length = sparks.length = blasts.length = 0;
+    soldiers.length = bullets.length = sparks.length = blasts.length = perks.length = 0;
     respawnAt = [0, 0];
     if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
   }
