@@ -16,13 +16,16 @@ description: Projects and writing by Ryan Cole on programming, technology and ga
   </ul>
 </section>
 
-<section class="posts">
+<section class="writing">
   <h2>Writing</h2>
-  <ul class="recent-posts">
+  <ul class="project-list">
     {% for post in site.posts limit:3 %}
       <li>
-        <a href="{{ post.url }}">{{ post.title }}</a>
-        <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%B %Y" }}</time>
+        <a href="{{ post.url }}">
+          <span class="project-name">{{ post.title }}</span>
+          <span class="project-desc">{{ post.excerpt | strip_html | normalize_whitespace | truncatewords: 30 }}</span>
+          <time class="project-date" datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%B %Y" }}</time>
+        </a>
       </li>
     {% endfor %}
   </ul>

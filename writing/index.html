@@ -4,27 +4,18 @@ title: Writing
 description: All posts by Ryan Cole on programming, technology and gaming.
 ---
 
-<section class="posts">
+<section class="writing">
   <p class="back-link"><a href="/">&larr; Home</a></p>
+  <h2>Writing</h2>
+  <ul class="project-list">
     {% for post in site.posts %}
-
-      {% capture currentyear %}{{ post.date | date: "%b %Y" }}{% endcapture %}
-
-      {% if currentyear != year %}
-
-        {% unless forloop.first %}
-            </ul>
-        {% endunless %}
-
-        <h3>{{ currentyear }}</h3>
-        <ul>
-
-        {% capture year %}{{ currentyear }}{% endcapture %}
-
-      {% endif %}
-
-      <li><a href="{{ post.url }}">{{ post.title }}</a></li>
-
+      <li>
+        <a href="{{ post.url }}">
+          <span class="project-name">{{ post.title }}</span>
+          <span class="project-desc">{{ post.excerpt | strip_html | normalize_whitespace | truncatewords: 30 }}</span>
+          <time class="project-date" datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%B %Y" }}</time>
+        </a>
+      </li>
     {% endfor %}
-    </ul>
+  </ul>
 </section>

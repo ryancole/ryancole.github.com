@@ -42,7 +42,12 @@ main {
   margin: 0 auto;
 }
 
-/* Header */
+/* Pages without a header start a bit lower. */
+body > main:first-child {
+  padding-top: 4rem;
+}
+
+/* Post page header */
 
 header {
   padding: 4rem 0 2rem;
@@ -219,6 +224,13 @@ main > section > h2 {
   color: var(--accent);
 }
 
+.project-date {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
 .project-desc {
   display: block;
   margin-top: 0.2rem;
@@ -227,32 +239,7 @@ main > section > h2 {
   color: var(--muted);
 }
 
-/* Post index */
-
-.posts h3 {
-  margin: 2rem 0 0.5rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-}
-
-.posts h2 + h3,
-.back-link + h3 {
-  margin-top: 0;
-}
-
-.recent-posts time {
-  display: block;
-  margin-top: -0.3rem;
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
-.recent-posts li + li {
-  margin-top: 0.75rem;
-}
+/* Writing */
 
 .all-posts,
 .back-link {
@@ -267,29 +254,6 @@ main > section > h2 {
 .all-posts a,
 .back-link a {
   text-decoration: none;
-}
-
-.posts ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.posts li {
-  margin: 0;
-}
-
-.posts ul a {
-  display: block;
-  padding: 0.4rem 0;
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: var(--text);
-  text-decoration: none;
-}
-
-.posts ul a:hover {
-  color: var(--accent);
 }
 
 /* Post footer and comments */

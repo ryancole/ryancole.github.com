@@ -21,14 +21,9 @@
     <link rel="alternate" type="application/rss+xml" title="rycole.com rss feed" href="https://rycole.com/rss.xml" />
     <link rel="SHORTCUT ICON" href="/static/img/favicon.ico" />
 
-    <script src="/static/js/soldiers.js" defer></script>
+    {% if page.url == "/" %}<script src="/static/js/soldiers.js" defer></script>{% endif %}
   </head>
   <body>
-    <header>
-      <h1 id="masthead">{{ page.title }}</h1>
-      <h4 id="masthead-sub">Hello, my name is <a href="https://twitter.com/_ryancole">Ryan</a>. This is my site.</h4>
-    </header>
-
     <main>
       {{ content }}
     </main>
