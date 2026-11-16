@@ -25,6 +25,8 @@
   var GRENADE_SPEED = 9;
   var GRENADE_GRAVITY = 0.25;
   var BLAST_RADIUS = 40;
+  var GRENADE_FUSE = 180;      // frames (3s) of bouncing before it goes off
+  var GRENADE_BOUNCE = 0.55;   // fraction of fall speed kept on each bounce
 
   // Each soldier also spawns with one movement item at random.
   //   grapple: hook a ledge above and reel up
@@ -752,7 +754,7 @@
       x: m.x, y: m.y, ox: m.x, oy: m.y,
       vx: Math.cos(angle) * GRENADE_SPEED,
       vy: Math.sin(angle) * GRENADE_SPEED,
-      life: 240
+      life: GRENADE_FUSE
     });
   }
 
@@ -1038,7 +1040,13 @@
       var prevUY = u.y;
 
       if (u.kind === 'grenade') {
-        u.vy += GRENADE_GRAVITY;
+        if (u.rest) {
+          // Rolling along a ledge: friction, and fall off the end.
+          u.vx *= 0.94;
+          if (u.x < u.rest.left || u.x > u.rest.right) u.rest = null;
+        } else {
+          u.vy += GRENADE_GRAVITY;
+        }
       } else if (u.kind === 'flame') {
         u.vx *= 0.96; u.vy = u.vy * 0.96 - 0.05; // slows and rises
         u.age++;
@@ -1047,13 +1055,24 @@
       u.y += u.vy;
 
       if (u.kind === 'grenade') {
-        var boom = --u.life <= 0 || hitSoldier(u.team, u.x, u.y, 2) || u.y > docH;
-        if (!boom && u.vy > 0) {
+        var boom = --u.life <= 0 || hitSoldier(u.team, u.x, u.y, 2) || u.y > docH + 50;
+        if (!boom && !u.rest && u.vy > 0) {
+          // Ledges are one-way, like for the soldiers: grenades fly up through
+          // them and only hit them on the way down. Airstrike bombs explode on
+          // impact; launcher grenades bounce until the fuse runs out.
           for (var k = 0; k < platforms.length; k++) {
             var p = platforms[k];
-            if (u.x >= p.left && u.x <= p.right && prevUY <= p.top && u.y >= p.top) { u.y = p.top; boom = true; break; }
+            if (u.x >= p.left && u.x <= p.right && prevUY <= p.top && u.y >= p.top) {
+              u.y = p.top;
+              if (u.bomb) { boom = true; break; }
+              u.vy = -u.vy * GRENADE_BOUNCE;
+              u.vx *= 0.8;
+              if (Math.abs(u.vy) < 1.2) { u.vy = 0; u.rest = p; }
+              break;
+            }
           }
         }
+        if (!u.bomb && (u.x < 4 || u.x > docW - 4)) { u.vx = -u.vx; u.x = Math.max(4, Math.min(docW - 4, u.x)); }
         if (boom) { explode(u); bullets.splice(b, 1); }
         continue;
       }
@@ -1194,7 +1213,7 @@
         ctx.fillRect(bx - SCALE, by - 2 * SCALE, 2 * SCALE, 3 * SCALE);
         ctx.fillRect(bx - 2 * SCALE, by - 3 * SCALE, 4 * SCALE, SCALE); // fins
       } else if (u.kind === 'grenade') {
-        ctx.fillStyle = '#007800';
+        ctx.fillStyle = u.life < 90 && (u.life >> (u.life < 40 ? 1 : 2)) % 2 ? '#d82800' : '#007800';
         ctx.fillRect(bx - SCALE, by - SCALE, 2 * SCALE, 2 * SCALE);
         ctx.fillStyle = '#000000';
         ctx.fillRect(bx - SCALE, by - SCALE, SCALE, SCALE);

@@ -17,7 +17,10 @@ description: Projects and writing by Ryan Cole on programming, technology and ga
 </section>
 
 <section class="writing">
-  <h2>Writing</h2>
+  <div class="section-head">
+    <h2>Writing</h2>
+    <a class="all-posts" href="/writing/">All posts &rarr;</a>
+  </div>
   <ul class="project-list">
     {% for post in site.posts limit:3 %}
       <li>
@@ -29,5 +32,4 @@ description: Projects and writing by Ryan Cole on programming, technology and ga
       </li>
     {% endfor %}
   </ul>
-  <p class="all-posts"><a href="/writing/">All posts &rarr;</a></p>
 </section>
