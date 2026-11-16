@@ -7,7 +7,7 @@
     <meta name="author" content="Ryan Cole" />
     <meta name="copyright" content="&copy; Copyright 2013" />
 
-    <meta name="twitter:url" content="http://rycole.com{{ page.url }}">
+    <meta name="twitter:url" content="https://rycole.com{{ page.url }}">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:site" content="@_ryancole">
     <meta name="twitter:title" content="{{ page.title }}">
@@ -15,10 +15,9 @@
 
     <title>{{ page.title }} &mdash; rycole.com</title>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.9/dist/css/bootstrap.min.css" integrity="sha384-yEPZ7jP9S0QKiUQ0m3jjsO4ProIW7wvR9gXkI7JOGa2XVsw53Yke2bsdkBbjmmiX" crossorigin="anonymous">
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="stylesheet" href="/static/css/pygments.css">
-    <link rel="alternate" type="application/rss+xml" title="rycole.com rss feed" href="http://rycole.com/rss.xml" />
+    <link rel="alternate" type="application/rss+xml" title="rycole.com rss feed" href="https://rycole.com/rss.xml" />
     <link rel="SHORTCUT ICON" href="/static/img/favicon.ico" />
 
     <script type="text/javascript">
@@ -30,28 +29,23 @@
         (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
       })();
     </script>
+    <script src="/static/js/soldiers.js" defer></script>
   </head>
   <body>
 
-    <div class="container">
-      <div class="row">
-        <div class="col-8 offset-2 mt-4">
-          <h1 id="masthead" class="display-4">{{ page.title }}</h1>
-          <h4 id="masthead-sub" class="display-4">Posted on {{ page.date | date:"%B %d, %Y" }} &mdash; <a href="/">Home</a></h4>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-8 offset-2 mt-4">
-          {{ content }}
-          <p class="text-muted">&mdash; Ryan Cole</p>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-4 offset-4 mt-4">
-          <div id="disqus_thread"></div>
-        </div>
-      </div>
-    </div>
+    <header>
+      <h1 id="masthead">{{ page.title }}</h1>
+      <h4 id="masthead-sub">Posted on {{ page.date | date:"%B %d, %Y" }} &mdash; <a href="/">Home</a></h4>
+    </header>
+
+    <main>
+      <article>
+        {{ content }}
+        <p>&mdash; Ryan Cole</p>
+      </article>
+
+      <div id="disqus_thread"></div>
+    </main>
 
   </body>
 </html>

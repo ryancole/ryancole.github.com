@@ -1,32 +1,30 @@
 ---
 layout: default
-title: Programming, Technology and Gaming
-description: rycole.com is a blog about programming, technology and gaming.
+title: Ryan Cole
+description: Projects and writing by Ryan Cole on programming, technology and gaming.
 ---
 
-<div class="row">
-  <div class="col-8 offset-2 mt-4">
-    
-    {% for post in site.posts %}
+<section class="projects">
+  <h2>Projects</h2>
+  <ul class="project-list">
+    <li>
+      <a href="/permanent-beta/">
+        <span class="project-name">Permanent Beta</span>
+        <span class="project-desc">Keeps function hooks working across new builds of a program by finding, verifying and repairing each hooked function.</span>
+      </a>
+    </li>
+  </ul>
+</section>
 
-      {% capture currentyear %}{{ post.date | date: "%b %Y" }}{% endcapture %}
-
-      {% if currentyear != year %}
-
-        {% unless forloop.first %}
-            </ul>
-        {% endunless %}
-
-        <h3>{{ currentyear }}</h3>
-        <ul>
-
-        {% capture year %}{{ currentyear }}{% endcapture %}
-
-      {% endif %}
-
-      <li><a href="{{ post.url }}">{{ post.title }}</a></li>
-
+<section class="posts">
+  <h2>Writing</h2>
+  <ul class="recent-posts">
+    {% for post in site.posts limit:3 %}
+      <li>
+        <a href="{{ post.url }}">{{ post.title }}</a>
+        <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%B %Y" }}</time>
+      </li>
     {% endfor %}
-    
-  </div>
-</div>
+  </ul>
+  <p class="all-posts"><a href="/writing/">All posts &rarr;</a></p>
+</section>
